@@ -10,12 +10,17 @@ function getApiBaseUrl() {
 const API_BASE_URL = getApiBaseUrl();
 
 export async function apiRequest(path, options = {}) {
+  const isFormData = options.body instanceof FormData;
+  const headers = isFormData
+    ? options.headers
+    : {
+        "Content-Type": "application/json",
+        ...options.headers
+      };
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers
-    },
+    headers,
     ...options
   });
 

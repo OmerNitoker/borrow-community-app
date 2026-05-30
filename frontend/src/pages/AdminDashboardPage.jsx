@@ -1,8 +1,9 @@
-import { Check, Loader2, X } from "lucide-react";
+import { Check, EyeOff, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getCommunityOverview } from "../api/adminApi.js";
 import { approveMembership, rejectMembership } from "../api/membershipApi.js";
+import { hideItem } from "../api/itemApi.js";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 
 function AdminDashboardPage() {
@@ -31,6 +32,19 @@ function AdminDashboardPage() {
         await rejectMembership(membershipId);
       }
 
+      await loadOverview();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  async function handleHideItem(itemId) {
+    setBusyId(itemId);
+
+    try {
+      await hideItem(itemId);
       await loadOverview();
     } catch (err) {
       setError(err.message);
@@ -111,7 +125,31 @@ function AdminDashboardPage() {
           ))}
         </Panel>
         <Panel title="רשימת פריטים">
-          <p className="py-3 text-slate-600">ניהול והסתרת פריטים יתווספו במיילסטון הפריטים.</p>
+          {overview.items.length === 0 ? (
+            <p className="py-3 text-slate-600">עדיין אין פריטים בקהילה.</p>
+          ) : (
+            overview.items.map((item) => (
+              <div key={item.id} className="flex items-center justify-between gap-3 border-b border-slate-100 py-3">
+                <div>
+                  <p className="font-bold">{item.title}</p>
+                  <p className="text-sm text-slate-600">
+                    {item.owner.name} · {item.category} · {item.isActive ? "פעיל" : "לא פעיל"}
+                  </p>
+                </div>
+                {item.isActive ? (
+                  <button
+                    className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:text-red-300"
+                    disabled={Boolean(busyId)}
+                    onClick={() => handleHideItem(item.id)}
+                    type="button"
+                  >
+                    {busyId === item.id ? <Loader2 className="animate-spin" size={16} /> : <EyeOff size={16} />}
+                    הסתרה
+                  </button>
+                ) : null}
+              </div>
+            ))
+          )}
         </Panel>
       </section>
     </section>

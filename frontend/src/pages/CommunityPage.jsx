@@ -3,25 +3,31 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getCommunity, getCommunityItems } from "../api/communityApi.js";
 import LoadingScreen from "../components/LoadingScreen.jsx";
+import { itemCategories } from "../constants/itemOptions.js";
 
 function CommunityPage() {
   const { communityId } = useParams();
   const [data, setData] = useState(null);
   const [itemsData, setItemsData] = useState(null);
   const [error, setError] = useState("");
+  const [filters, setFilters] = useState({
+    search: "",
+    category: "",
+    sort: "newest"
+  });
 
   useEffect(() => {
     setData(null);
     setItemsData(null);
     setError("");
 
-    Promise.all([getCommunity(communityId), getCommunityItems(communityId)])
+    Promise.all([getCommunity(communityId), getCommunityItems(communityId, filters)])
       .then(([communityData, communityItemsData]) => {
         setData(communityData);
         setItemsData(communityItemsData);
       })
       .catch((err) => setError(err.message));
-  }, [communityId]);
+  }, [communityId, filters]);
 
   if (error) {
     return <PageMessage title="אין גישה לקהילה" text={error} />;
@@ -77,17 +83,35 @@ function CommunityPage() {
             <Search className="absolute right-3 top-3.5 text-slate-400" size={18} />
             <input
               className="w-full rounded-md border border-slate-300 py-3 pl-3 pr-10 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-              disabled
+              onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
               placeholder="חיפוש לפי שם או תיאור"
+              value={filters.search}
             />
           </label>
-          <button className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-500" disabled>
-            <SlidersHorizontal size={17} />
-            קטגוריה
-          </button>
-          <button className="rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-500" disabled>
-            מיון
-          </button>
+          <label className="relative block">
+            <SlidersHorizontal className="absolute right-3 top-3.5 text-slate-400" size={17} />
+            <select
+              className="w-full rounded-md border border-slate-300 bg-white py-3 pl-3 pr-10 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+              onChange={(event) => setFilters((current) => ({ ...current, category: event.target.value }))}
+              value={filters.category}
+            >
+              <option value="">כל הקטגוריות</option>
+              {itemCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </label>
+          <select
+            className="rounded-md border border-slate-300 bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+            onChange={(event) => setFilters((current) => ({ ...current, sort: event.target.value }))}
+            value={filters.sort}
+          >
+            <option value="newest">מהחדש לישן</option>
+            <option value="oldest">מהישן לחדש</option>
+            <option value="name">שם הפריט</option>
+          </select>
         </div>
       </section>
 
@@ -97,7 +121,7 @@ function CommunityPage() {
             עדיין אין פריטים פעילים בקהילה.
           </div>
         ) : (
-          itemsData.items.map((item) => <ItemCard item={item} key={item.id} />)
+          itemsData.items.map((item) => <ItemCard communityId={communityId} item={item} key={item.id} />)
         )}
       </section>
     </section>
@@ -113,12 +137,12 @@ function Stat({ label, value }) {
   );
 }
 
-function ItemCard({ item }) {
+function ItemCard({ communityId, item }) {
   const isLocked = !item.viewer.isOwner && !item.viewer.canViewContact;
   const Icon = isLocked ? Lock : Unlock;
 
   return (
-    <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <Link className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" to={`/communities/${communityId}/items/${item.id}`}>
       {item.imageUrl ? (
         <img alt="" className="h-40 w-full object-cover" src={item.imageUrl} />
       ) : (
@@ -134,7 +158,7 @@ function ItemCard({ item }) {
         </div>
         {item.description ? <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{item.description}</p> : null}
       </div>
-    </article>
+    </Link>
   );
 }
 

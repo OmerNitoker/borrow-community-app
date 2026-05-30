@@ -1,9 +1,22 @@
 import express from "express";
+import {
+  addItemImages,
+  createItem,
+  deleteItemImage,
+  getItem,
+  hideItem,
+  updateItem
+} from "../controllers/itemController.js";
+import { requireAuth } from "../middleware/requireAuth.js";
+import { uploadItemImages } from "../middleware/upload.js";
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.json({ route: "items", status: "not implemented yet" });
-});
+router.post("/", requireAuth, uploadItemImages.array("images", 3), createItem);
+router.get("/:itemId", requireAuth, getItem);
+router.patch("/:itemId", requireAuth, updateItem);
+router.delete("/:itemId", requireAuth, hideItem);
+router.post("/:itemId/images", requireAuth, uploadItemImages.array("images", 3), addItemImages);
+router.delete("/:itemId/images/:publicId", requireAuth, deleteItemImage);
 
 export default router;

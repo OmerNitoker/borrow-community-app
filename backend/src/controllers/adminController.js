@@ -15,6 +15,8 @@ export const getCommunityOverview = asyncHandler(async (req, res) => {
     getCommunityStats(req.params.communityId)
   ]);
 
+  const items = await Item.find({ community: req.params.communityId }).populate("owner", "name").sort({ createdAt: -1 });
+
   res.json({
     stats: {
       ...stats,
@@ -22,6 +24,18 @@ export const getCommunityOverview = asyncHandler(async (req, res) => {
       activeItemCount
     },
     pendingMembers: memberships.filter((membership) => membership.status === "pending").map(mapMember),
-    members: memberships.filter((membership) => membership.status === "approved").map(mapMember)
+    members: memberships.filter((membership) => membership.status === "approved").map(mapMember),
+    items: items.map((item) => ({
+      id: item._id.toString(),
+      title: item.title,
+      category: item.category,
+      isActive: item.isActive,
+      hiddenByAdmin: item.hiddenByAdmin,
+      owner: {
+        id: item.owner._id.toString(),
+        name: item.owner.name
+      },
+      createdAt: item.createdAt
+    }))
   });
 });

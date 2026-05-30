@@ -68,8 +68,27 @@ export const getCommunityItems = asyncHandler(async (req, res) => {
     throw createHttpError(403, "Approved community membership required.");
   }
 
+  const query = {
+    community: req.params.communityId,
+    isActive: true
+  };
+
+  if (req.query.category) {
+    query.category = req.query.category;
+  }
+
+  if (req.query.search) {
+    const search = String(req.query.search).trim();
+
+    if (search) {
+      query.$or = [{ title: { $regex: search, $options: "i" } }, { description: { $regex: search, $options: "i" } }];
+    }
+  }
+
+  const sort = getItemSort(req.query.sort);
+
   const [items, activeItemCount] = await Promise.all([
-    Item.find({ community: req.params.communityId, isActive: true }).sort({ createdAt: -1 }),
+    Item.find(query).sort(sort),
     Item.countDocuments({
       community: req.params.communityId,
       owner: req.user._id,
@@ -93,3 +112,15 @@ export const getCommunityItems = asyncHandler(async (req, res) => {
     }
   });
 });
+
+function getItemSort(sort) {
+  if (sort === "name") {
+    return { title: 1 };
+  }
+
+  if (sort === "oldest") {
+    return { createdAt: 1 };
+  }
+
+  return { createdAt: -1 };
+}

@@ -1,0 +1,271 @@
+import { ITEM_CATEGORIES } from "../constants/categories.js";
+import { ITEM_CONDITIONS } from "../constants/itemConditions.js";
+import { Item } from "../models/Item.js";
+import { getContactAccess } from "../services/contactAccessService.js";
+import { deleteCloudinaryImage, uploadImageBuffer } from "../services/cloudinaryService.js";
+import { getApprovedMembership, requireCommunityAdmin } from "../services/membershipService.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { createHttpError } from "../utils/createHttpError.js";
+import { mapItemDetail } from "../utils/mapItemDetail.js";
+
+export const createItem = asyncHandler(async (req, res) => {
+  const payload = normalizeItemPayload(req.body);
+  const membership = await getApprovedMembership(req.user._id, payload.community);
+
+  if (!membership) {
+    throw createHttpError(403, "Approved community membership required.");
+  }
+
+  const uploadedImages = await uploadFiles(req.files || []);
+
+  try {
+    const item = await Item.create({
+      ...payload,
+      owner: req.user._id,
+      images: uploadedImages
+    });
+
+    res.status(201).json({ item: mapOwnedItem(item) });
+  } catch (error) {
+    await Promise.all(uploadedImages.map((image) => deleteCloudinaryImage(image.publicId)));
+    throw error;
+  }
+});
+
+export const getItem = asyncHandler(async (req, res) => {
+  const item = await Item.findById(req.params.itemId).populate("owner", "name phone");
+
+  if (!item) {
+    throw createHttpError(404, "Item not found.");
+  }
+
+  const access = await getContactAccess({ userId: req.user._id, item });
+
+  if (!access.isApprovedMember) {
+    throw createHttpError(403, "Approved community membership required.");
+  }
+
+  const ownerId = item.owner._id.toString();
+  const isOwner = ownerId === req.user._id.toString();
+
+  if (!item.isActive && !isOwner && !access.isCommunityAdmin) {
+    throw createHttpError(404, "Item not found.");
+  }
+
+  res.json(mapItemDetail(item, { ...access, userId: req.user._id }));
+});
+
+export const updateItem = asyncHandler(async (req, res) => {
+  const item = await Item.findById(req.params.itemId);
+
+  if (!item) {
+    throw createHttpError(404, "Item not found.");
+  }
+
+  const isOwner = item.owner.toString() === req.user._id.toString();
+
+  if (!isOwner) {
+    throw createHttpError(403, "Only the item owner can edit this item.");
+  }
+
+  const payload = normalizeItemPayload({ ...item.toObject(), ...req.body }, { partial: true });
+
+  item.title = payload.title ?? item.title;
+  item.description = payload.description ?? item.description;
+  item.notes = payload.notes ?? item.notes;
+  item.category = payload.category ?? item.category;
+  item.condition = payload.condition ?? item.condition;
+
+  if (typeof payload.isActive === "boolean") {
+    if (payload.isActive && item.hiddenByAdmin) {
+      throw createHttpError(403, "Items hidden by an admin cannot be reactivated by the owner.");
+    }
+
+    item.isActive = payload.isActive;
+    item.hiddenAt = payload.isActive ? null : new Date();
+    item.hiddenBy = payload.isActive ? null : req.user._id;
+    item.hiddenReason = payload.isActive ? "" : "owner-hidden";
+  }
+
+  await item.save();
+  res.json({ item: mapOwnedItem(item) });
+});
+
+export const hideItem = asyncHandler(async (req, res) => {
+  const item = await Item.findById(req.params.itemId);
+
+  if (!item) {
+    throw createHttpError(404, "Item not found.");
+  }
+
+  if (item.isDemoItem) {
+    throw createHttpError(403, "Protected demo items cannot be hidden.");
+  }
+
+  const isOwner = item.owner.toString() === req.user._id.toString();
+  const isAdmin = await isCommunityAdmin(req.user._id, item.community);
+
+  if (!isOwner && !isAdmin) {
+    throw createHttpError(403, "Only the owner or a community admin can hide this item.");
+  }
+
+  item.isActive = false;
+  item.hiddenAt = new Date();
+  item.hiddenBy = req.user._id;
+  item.hiddenByAdmin = isAdmin && !isOwner;
+  item.hiddenReason = item.hiddenByAdmin ? "admin-hidden" : "owner-hidden";
+
+  await item.save();
+  res.json({ item: mapOwnedItem(item) });
+});
+
+export const addItemImages = asyncHandler(async (req, res) => {
+  const item = await getOwnedItem(req.params.itemId, req.user._id);
+  const files = req.files || [];
+
+  if (item.images.length + files.length > 3) {
+    throw createHttpError(400, "An item can have up to 3 images.");
+  }
+
+  const uploadedImages = await uploadFiles(files);
+  item.images.push(...uploadedImages);
+
+  try {
+    await item.save();
+    res.status(201).json({ item: mapOwnedItem(item) });
+  } catch (error) {
+    await Promise.all(uploadedImages.map((image) => deleteCloudinaryImage(image.publicId)));
+    throw error;
+  }
+});
+
+export const deleteItemImage = asyncHandler(async (req, res) => {
+  const item = await getOwnedItem(req.params.itemId, req.user._id);
+  const image = item.images.find((currentImage) => currentImage.publicId === req.params.publicId);
+
+  if (!image) {
+    throw createHttpError(404, "Image not found.");
+  }
+
+  item.images = item.images.filter((currentImage) => currentImage.publicId !== req.params.publicId);
+  await item.save();
+  await deleteCloudinaryImage(image.publicId);
+
+  res.json({ item: mapOwnedItem(item) });
+});
+
+export const getMyItems = asyncHandler(async (req, res) => {
+  const query = { owner: req.user._id };
+
+  if (req.query.communityId) {
+    query.community = req.query.communityId;
+  }
+
+  const items = await Item.find(query).sort({ createdAt: -1 });
+  res.json({ items: items.map(mapOwnedItem) });
+});
+
+async function uploadFiles(files) {
+  if (files.length === 0) {
+    return [];
+  }
+
+  if (files.length > 3) {
+    throw createHttpError(400, "An item can have up to 3 images.");
+  }
+
+  return Promise.all(files.map(uploadImageBuffer));
+}
+
+async function getOwnedItem(itemId, userId) {
+  const item = await Item.findById(itemId);
+
+  if (!item) {
+    throw createHttpError(404, "Item not found.");
+  }
+
+  if (item.owner.toString() !== userId.toString()) {
+    throw createHttpError(403, "Only the item owner can update images.");
+  }
+
+  return item;
+}
+
+async function isCommunityAdmin(userId, communityId) {
+  try {
+    await requireCommunityAdmin(userId, communityId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function normalizeItemPayload(payload, options = {}) {
+  const normalized = {};
+
+  if (!options.partial || payload.title !== undefined) {
+    normalized.title = String(payload.title || "").trim();
+
+    if (!normalized.title) {
+      throw createHttpError(400, "Item title is required.");
+    }
+  }
+
+  if (!options.partial || payload.community !== undefined) {
+    normalized.community = payload.community;
+
+    if (!normalized.community) {
+      throw createHttpError(400, "Community is required.");
+    }
+  }
+
+  if (!options.partial || payload.category !== undefined) {
+    normalized.category = payload.category;
+
+    if (!ITEM_CATEGORIES.includes(normalized.category)) {
+      throw createHttpError(400, "Invalid item category.");
+    }
+  }
+
+  if (!options.partial || payload.condition !== undefined) {
+    normalized.condition = payload.condition;
+
+    if (!ITEM_CONDITIONS.includes(normalized.condition)) {
+      throw createHttpError(400, "Invalid item condition.");
+    }
+  }
+
+  if (payload.description !== undefined) {
+    normalized.description = String(payload.description || "").trim();
+  }
+
+  if (payload.notes !== undefined) {
+    normalized.notes = String(payload.notes || "").trim();
+  }
+
+  if (payload.isActive !== undefined) {
+    normalized.isActive = payload.isActive === true || payload.isActive === "true";
+  }
+
+  return normalized;
+}
+
+function mapOwnedItem(item) {
+  return {
+    id: item._id.toString(),
+    title: item.title,
+    description: item.description,
+    notes: item.notes,
+    condition: item.condition,
+    category: item.category,
+    community: item.community.toString(),
+    owner: item.owner.toString(),
+    images: item.images,
+    imageUrl: item.images[0]?.url || "",
+    isActive: item.isActive,
+    hiddenByAdmin: item.hiddenByAdmin,
+    hiddenReason: item.hiddenReason,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt
+  };
+}

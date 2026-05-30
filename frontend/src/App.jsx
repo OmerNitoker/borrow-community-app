@@ -6,7 +6,8 @@ import AdminDashboardPage from "./pages/AdminDashboardPage.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import CommunityPage from "./pages/CommunityPage.jsx";
 import HomeRedirect from "./pages/HomeRedirect.jsx";
-import ItemFormPlaceholderPage from "./pages/ItemFormPlaceholderPage.jsx";
+import ItemDetailsPage from "./pages/ItemDetailsPage.jsx";
+import ItemFormPage from "./pages/ItemFormPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import OnboardingPage from "./pages/OnboardingPage.jsx";
 import PendingApprovalPage from "./pages/PendingApprovalPage.jsx";
@@ -30,7 +31,9 @@ function App() {
           <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/pending/:communityId" element={<PendingApprovalPage />} />
           <Route path="/communities/:communityId" element={<CommunityPage />} />
-          <Route path="/communities/:communityId/items/new" element={<ItemFormPlaceholderPage />} />
+          <Route path="/communities/:communityId/items/new" element={<ItemFormPage mode="create" />} />
+          <Route path="/communities/:communityId/items/:itemId" element={<ItemDetailsPage />} />
+          <Route path="/communities/:communityId/items/:itemId/edit" element={<ItemFormPage mode="edit" />} />
           <Route path="/communities/:communityId/admin" element={<AdminDashboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
