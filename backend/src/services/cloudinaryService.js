@@ -23,7 +23,8 @@ export async function uploadImageBuffer(file) {
       },
       (error, result) => {
         if (error) {
-          reject(error);
+          console.error("Cloudinary upload failed:", getCloudinaryErrorMessage(error));
+          reject(createHttpError(502, "Image upload failed. Please check the Cloudinary configuration."));
           return;
         }
 
@@ -44,7 +45,12 @@ export async function deleteCloudinaryImage(publicId) {
   }
 
   ensureCloudinaryConfigured();
-  await cloudinary.uploader.destroy(publicId);
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    console.error("Cloudinary delete failed:", getCloudinaryErrorMessage(error));
+    throw createHttpError(502, "Image delete failed. Please check the Cloudinary configuration.");
+  }
 }
 
 async function optimizeImage(buffer) {
@@ -58,4 +64,8 @@ async function optimizeImage(buffer) {
       quality: env.images.quality
     })
     .toBuffer();
+}
+
+function getCloudinaryErrorMessage(error) {
+  return error?.error?.message || error?.message || "Unknown Cloudinary error";
 }
