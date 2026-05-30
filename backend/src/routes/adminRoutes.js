@@ -1,9 +1,9 @@
 import express from "express";
+import { getCommunityOverview } from "../controllers/adminController.js";
+import { requireAuth } from "../middleware/requireAuth.js";
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.json({ route: "admin", status: "not implemented yet" });
-});
+router.get("/community/:communityId/overview", requireAuth, getCommunityOverview);
 
 export default router;
