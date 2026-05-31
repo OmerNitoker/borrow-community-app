@@ -1,4 +1,4 @@
-import { Edit, EyeOff, Loader2, Plus, RotateCcw, Save } from "lucide-react";
+import { ArrowLeft, Edit, EyeOff, Loader2, Plus, RotateCcw, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { getMyItems, hideItem, updateItem } from "../api/itemApi.js";
@@ -127,16 +127,27 @@ function ProfilePage() {
               <p className="py-4 text-slate-600">עדיין לא הצטרפת לקהילות.</p>
             ) : (
               memberships.map((membership) => (
-                <div key={membership.id} className="flex items-center justify-between py-3">
+                <div key={membership.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-bold">{membership.community.name}</p>
                     <p className="text-sm text-slate-600">
                       {membership.role === "admin" ? "מנהל" : "חבר"} · {activeCountsByCommunity[membership.community.id] || 0} פריטים פעילים
                     </p>
                   </div>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-                    {membership.status === "approved" ? "מאושר" : "ממתין"}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
+                      {membership.status === "approved" ? "מאושר" : "ממתין"}
+                    </span>
+                    {membership.status === "approved" ? (
+                      <Link
+                        className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-100"
+                        to={`/communities/${membership.community.id}`}
+                      >
+                        מעבר לקהילה
+                        <ArrowLeft size={16} />
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
               ))
             )}
