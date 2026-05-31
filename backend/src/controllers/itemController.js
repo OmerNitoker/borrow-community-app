@@ -101,11 +101,12 @@ export const hideItem = asyncHandler(async (req, res) => {
     throw createHttpError(404, "Item not found.");
   }
 
-  if (item.isDemoItem) {
+  const isOwner = item.owner.toString() === req.user._id.toString();
+
+  if (item.isDemoItem && (!isOwner || !req.user.isDemoUser)) {
     throw createHttpError(403, "Protected demo items cannot be hidden.");
   }
 
-  const isOwner = item.owner.toString() === req.user._id.toString();
   const isAdmin = await isCommunityAdmin(req.user._id, item.community);
 
   if (!isOwner && !isAdmin) {

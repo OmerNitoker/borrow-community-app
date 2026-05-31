@@ -23,6 +23,14 @@ export function getCommunityItems(communityId, filters = {}) {
     params.set("sort", filters.sort);
   }
 
+  if (filters.page) {
+    params.set("page", filters.page);
+  }
+
+  if (filters.limit) {
+    params.set("limit", filters.limit);
+  }
+
   const query = params.toString() ? `?${params.toString()}` : "";
   return apiRequest(`/communities/${communityId}/items${query}`);
 }

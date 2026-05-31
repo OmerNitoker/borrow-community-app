@@ -86,15 +86,19 @@ export const getCommunityItems = asyncHandler(async (req, res) => {
   }
 
   const sort = getItemSort(req.query.sort);
+  const pagination = getPagination(req.query);
 
-  const [items, activeItemCount] = await Promise.all([
-    Item.find(query).sort(sort),
+  const [items, totalItems, activeItemCount] = await Promise.all([
+    Item.find(query).sort(sort).skip((pagination.page - 1) * pagination.limit).limit(pagination.limit),
+    Item.countDocuments(query),
     Item.countDocuments({
       community: req.params.communityId,
       owner: req.user._id,
       isActive: true
     })
   ]);
+
+  const totalPages = Math.max(1, Math.ceil(totalItems / pagination.limit));
 
   res.json({
     items: items.map((item) =>
@@ -109,6 +113,14 @@ export const getCommunityItems = asyncHandler(async (req, res) => {
       activeItemCount,
       requiredActiveItemCount: 3,
       canViewContact: membership.role === "admin" || activeItemCount >= 3
+    },
+    pagination: {
+      page: pagination.page,
+      limit: pagination.limit,
+      totalItems,
+      totalPages,
+      hasNextPage: pagination.page < totalPages,
+      hasPreviousPage: pagination.page > 1
     }
   });
 });
@@ -123,4 +135,12 @@ function getItemSort(sort) {
   }
 
   return { createdAt: -1 };
+}
+
+function getPagination(query) {
+  const page = Math.max(1, Number.parseInt(query.page, 10) || 1);
+  const requestedLimit = Number.parseInt(query.limit, 10) || 12;
+  const limit = Math.min(24, Math.max(6, requestedLimit));
+
+  return { page, limit };
 }

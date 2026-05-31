@@ -1,10 +1,12 @@
-import { Lock, Plus, Search, ShieldCheck, SlidersHorizontal, Unlock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lock, Plus, Search, ShieldCheck, SlidersHorizontal, Unlock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getCommunity, getCommunityItems } from "../api/communityApi.js";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { itemCategories } from "../constants/itemOptions.js";
 import { getItemImageUrl } from "../utils/itemImages.js";
+
+const ITEMS_PER_PAGE = 12;
 
 function CommunityPage() {
   const { communityId } = useParams();
@@ -18,10 +20,12 @@ function CommunityPage() {
     category: "",
     sort: "newest"
   });
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     setData(null);
     setError("");
+    setPage(1);
 
     getCommunity(communityId)
       .then(setData)
@@ -40,11 +44,11 @@ function CommunityPage() {
     setIsItemsLoading(true);
     setError("");
 
-    getCommunityItems(communityId, { ...filters, search: debouncedSearch })
+    getCommunityItems(communityId, { ...filters, search: debouncedSearch, page, limit: ITEMS_PER_PAGE })
       .then(setItemsData)
       .catch((err) => setError(err.message))
       .finally(() => setIsItemsLoading(false));
-  }, [communityId, filters, debouncedSearch]);
+  }, [communityId, filters, debouncedSearch, page]);
 
   if (error) {
     return <PageMessage title="אין גישה לקהילה" text={error} />;
@@ -56,6 +60,17 @@ function CommunityPage() {
 
   const isAdmin = data.membership.role === "admin";
   const accessStatus = itemsData.accessStatus;
+  const pagination = itemsData.pagination;
+
+  function handleSearchChange(event) {
+    setSearchInput(event.target.value);
+    setPage(1);
+  }
+
+  function handleFilterChange(key, value) {
+    setFilters((current) => ({ ...current, [key]: value }));
+    setPage(1);
+  }
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-10">
@@ -100,7 +115,7 @@ function CommunityPage() {
             <Search className="absolute right-3 top-3.5 text-slate-400" size={18} />
             <input
               className="w-full rounded-md border border-slate-300 py-3 pl-3 pr-10 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-              onChange={(event) => setSearchInput(event.target.value)}
+              onChange={handleSearchChange}
               placeholder="חיפוש לפי שם או תיאור"
               value={searchInput}
             />
@@ -109,7 +124,7 @@ function CommunityPage() {
             <SlidersHorizontal className="absolute right-3 top-3.5 text-slate-400" size={17} />
             <select
               className="w-full rounded-md border border-slate-300 bg-white py-3 pl-3 pr-10 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-              onChange={(event) => setFilters((current) => ({ ...current, category: event.target.value }))}
+              onChange={(event) => handleFilterChange("category", event.target.value)}
               value={filters.category}
             >
               <option value="">כל הקטגוריות</option>
@@ -122,7 +137,7 @@ function CommunityPage() {
           </label>
           <select
             className="rounded-md border border-slate-300 bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-            onChange={(event) => setFilters((current) => ({ ...current, sort: event.target.value }))}
+            onChange={(event) => handleFilterChange("sort", event.target.value)}
             value={filters.sort}
           >
             <option value="newest">מהחדש לישן</option>
@@ -141,6 +156,10 @@ function CommunityPage() {
           itemsData.items.map((item) => <ItemCard communityId={communityId} item={item} key={item.id} />)
         )}
       </section>
+
+      {pagination && pagination.totalPages > 1 ? (
+        <Pagination pagination={pagination} isLoading={isItemsLoading} onPageChange={setPage} />
+      ) : null}
     </section>
   );
 }
@@ -195,6 +214,36 @@ function AccessProgress({ accessStatus }) {
         <div className="h-full rounded-full bg-teal-700" style={{ width: `${progress}%` }} />
       </div>
     </div>
+  );
+}
+
+function Pagination({ pagination, isLoading, onPageChange }) {
+  return (
+    <nav className="mt-6 flex flex-col items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row">
+      <p className="text-sm font-semibold text-slate-700">
+        עמוד {pagination.page} מתוך {pagination.totalPages} · {pagination.totalItems} פריטים
+      </p>
+      <div className="flex items-center gap-2">
+        <button
+          className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-45"
+          disabled={!pagination.hasPreviousPage || isLoading}
+          onClick={() => onPageChange(pagination.page - 1)}
+          type="button"
+        >
+          <ChevronRight size={16} />
+          הקודם
+        </button>
+        <button
+          className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
+          disabled={!pagination.hasNextPage || isLoading}
+          onClick={() => onPageChange(pagination.page + 1)}
+          type="button"
+        >
+          הבא
+          <ChevronLeft size={16} />
+        </button>
+      </div>
+    </nav>
   );
 }
 

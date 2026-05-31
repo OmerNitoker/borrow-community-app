@@ -136,6 +136,47 @@ test("protected demo items cannot be changed", async () => {
   assert.equal(response.status, 403);
 });
 
+test("community item catalog returns paginated results", async () => {
+  const user = await register("catalog-user");
+  const { community } = await createCommunity(user.cookie, { requiredApproval: false });
+
+  for (let index = 1; index <= 15; index += 1) {
+    await createItem(user.cookie, community.id, `Catalog item ${index}`);
+  }
+
+  const response = await request("GET", `/communities/${community.id}/items?page=2&limit=6`, {
+    cookie: user.cookie
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.items.length, 6);
+  assert.deepEqual(response.body.pagination, {
+    page: 2,
+    limit: 6,
+    totalItems: 15,
+    totalPages: 3,
+    hasNextPage: true,
+    hasPreviousPage: true
+  });
+});
+
+test("the fixed demo user can hide their own demo items for fairness testing", async () => {
+  const user = await register("demo-owner");
+  const { community } = await createCommunity(user.cookie, { requiredApproval: false });
+  const { item } = await createItem(user.cookie, community.id, "Demo owner item");
+
+  await User.updateOne({ _id: user.user.id }, { isDemoUser: true });
+  await Item.updateOne({ _id: item.id }, { isDemoItem: true });
+
+  const response = await request("DELETE", `/items/${item.id}`, {
+    cookie: user.cookie
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.item.isActive, false);
+  assert.equal(response.body.item.hiddenReason, "owner-hidden");
+});
+
 async function register(name) {
   const response = await request("POST", "/auth/register", {
     body: {
