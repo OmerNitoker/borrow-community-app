@@ -2,6 +2,7 @@ import { ArrowLeft, Edit, EyeOff, Loader2, Plus, RotateCcw, Save } from "lucide-
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { getMyItems, hideItem, updateItem } from "../api/itemApi.js";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getItemImageUrl } from "../utils/itemImages.js";
 
@@ -14,6 +15,7 @@ function ProfilePage() {
   const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
+  const [confirmItem, setConfirmItem] = useState(null);
   const [profileForm, setProfileForm] = useState({
     name: user.name,
     phone: user.phone
@@ -50,6 +52,15 @@ function ProfilePage() {
     } finally {
       setBusyId("");
     }
+  }
+
+  async function confirmHideItem() {
+    if (!confirmItem) {
+      return;
+    }
+
+    await toggleItem(confirmItem);
+    setConfirmItem(null);
   }
 
   async function handleProfileSubmit(event) {
@@ -189,7 +200,7 @@ function ProfilePage() {
                   <button
                     className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
                     disabled={busyId === item.id || item.hiddenByAdmin}
-                    onClick={() => toggleItem(item)}
+                    onClick={() => (item.isActive ? setConfirmItem(item) : toggleItem(item))}
                     type="button"
                   >
                     {busyId === item.id ? (
@@ -207,6 +218,17 @@ function ProfilePage() {
           </div>
         )}
       </section>
+
+      {confirmItem ? (
+        <ConfirmDialog
+          confirmText="כן, להסתיר"
+          isLoading={busyId === confirmItem.id}
+          onCancel={() => setConfirmItem(null)}
+          onConfirm={confirmHideItem}
+          text={`${confirmItem.title} יוסתר מהקטלוג. מאחר שאתה מסתיר אותו בעצמך, רק אתה תוכל להחזיר אותו לפעילות.`}
+          title="להסתיר את הפריט?"
+        />
+      ) : null}
     </section>
   );
 }

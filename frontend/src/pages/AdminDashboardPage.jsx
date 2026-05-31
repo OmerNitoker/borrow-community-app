@@ -1,9 +1,10 @@
-import { Check, EyeOff, Loader2, X } from "lucide-react";
+import { Check, EyeOff, Loader2, RotateCcw, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getCommunityOverview } from "../api/adminApi.js";
 import { approveMembership, rejectMembership } from "../api/membershipApi.js";
-import { hideItem } from "../api/itemApi.js";
+import { hideItem, updateItem } from "../api/itemApi.js";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { getItemImageUrl } from "../utils/itemImages.js";
 
@@ -12,6 +13,7 @@ function AdminDashboardPage() {
   const [overview, setOverview] = useState(null);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [confirmAction, setConfirmAction] = useState(null);
 
   async function loadOverview() {
     setError("");
@@ -54,6 +56,39 @@ function AdminDashboardPage() {
     }
   }
 
+  async function handleReactivateItem(itemId) {
+    setBusyId(itemId);
+
+    try {
+      await updateItem(itemId, { isActive: true });
+      await loadOverview();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  async function runConfirmedAction() {
+    if (!confirmAction) {
+      return;
+    }
+
+    if (confirmAction.type === "membership") {
+      await updateRequest(confirmAction.action, confirmAction.id);
+    }
+
+    if (confirmAction.type === "hide-item") {
+      await handleHideItem(confirmAction.id);
+    }
+
+    if (confirmAction.type === "reactivate-item") {
+      await handleReactivateItem(confirmAction.id);
+    }
+
+    setConfirmAction(null);
+  }
+
   if (error) {
     return (
       <section className="mx-auto max-w-3xl px-5 py-10">
@@ -94,7 +129,17 @@ function AdminDashboardPage() {
                   <button
                     className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:bg-slate-400"
                     disabled={Boolean(busyId)}
-                    onClick={() => updateRequest("approve", membership.id)}
+                    onClick={() =>
+                      setConfirmAction({
+                        type: "membership",
+                        action: "approve",
+                        id: membership.id,
+                        title: "לאשר את בקשת ההצטרפות?",
+                        text: `${membership.user.name} יקבל גישה לקהילה ולפריטים הפעילים בה.`,
+                        confirmText: "כן, לאשר",
+                        tone: "success"
+                      })
+                    }
                     type="button"
                   >
                     {busyId === membership.id ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
@@ -103,7 +148,16 @@ function AdminDashboardPage() {
                   <button
                     className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:text-red-300"
                     disabled={Boolean(busyId)}
-                    onClick={() => updateRequest("reject", membership.id)}
+                    onClick={() =>
+                      setConfirmAction({
+                        type: "membership",
+                        action: "reject",
+                        id: membership.id,
+                        title: "לדחות את בקשת ההצטרפות?",
+                        text: `${membership.user.name} לא יקבל גישה לקהילה בשלב זה.`,
+                        confirmText: "כן, לדחות"
+                      })
+                    }
                     type="button"
                   >
                     <X size={16} />
@@ -144,11 +198,38 @@ function AdminDashboardPage() {
                   <button
                     className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:text-red-300"
                     disabled={Boolean(busyId)}
-                    onClick={() => handleHideItem(item.id)}
+                    onClick={() =>
+                      setConfirmAction({
+                        type: "hide-item",
+                        id: item.id,
+                        title: "להסתיר את הפריט?",
+                        text: `${item.title} יוסתר מהקטלוג. אם הפריט הוסתר על ידי מנהל, רק מנהל קהילה יוכל להחזיר אותו לפעילות.`,
+                        confirmText: "כן, להסתיר"
+                      })
+                    }
                     type="button"
                   >
                     {busyId === item.id ? <Loader2 className="animate-spin" size={16} /> : <EyeOff size={16} />}
                     הסתרה
+                  </button>
+                ) : item.hiddenByAdmin ? (
+                  <button
+                    className="inline-flex items-center gap-2 rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-100 disabled:text-slate-400"
+                    disabled={Boolean(busyId)}
+                    onClick={() =>
+                      setConfirmAction({
+                        type: "reactivate-item",
+                        id: item.id,
+                        title: "להחזיר את הפריט לפעילות?",
+                        text: `${item.title} יחזור להופיע בקטלוג הקהילה.`,
+                        confirmText: "כן, להחזיר",
+                        tone: "success"
+                      })
+                    }
+                    type="button"
+                  >
+                    {busyId === item.id ? <Loader2 className="animate-spin" size={16} /> : <RotateCcw size={16} />}
+                    הפעלה
                   </button>
                 ) : null}
               </div>
@@ -156,6 +237,18 @@ function AdminDashboardPage() {
           )}
         </Panel>
       </section>
+
+      {confirmAction ? (
+        <ConfirmDialog
+          confirmText={confirmAction.confirmText}
+          isLoading={busyId === confirmAction.id}
+          onCancel={() => setConfirmAction(null)}
+          onConfirm={runConfirmedAction}
+          text={confirmAction.text}
+          title={confirmAction.title}
+          tone={confirmAction.tone}
+        />
+      ) : null}
     </section>
   );
 }

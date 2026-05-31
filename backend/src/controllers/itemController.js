@@ -63,31 +63,38 @@ export const updateItem = asyncHandler(async (req, res) => {
     throw createHttpError(404, "Item not found.");
   }
 
-  ensureDemoItemCanBeChanged(item);
-
   const isOwner = item.owner.toString() === req.user._id.toString();
+  const isAdmin = await isCommunityAdmin(req.user._id, item.community);
+  const isStatusOnlyUpdate = isOnlyUpdatingStatus(req.body);
 
-  if (!isOwner) {
+  if (item.isDemoItem && !isStatusOnlyUpdate) {
+    ensureDemoItemCanBeChanged(item);
+  }
+
+  if (!isOwner && !(isAdmin && isStatusOnlyUpdate)) {
     throw createHttpError(403, "Only the item owner can edit this item.");
   }
 
   const payload = normalizeItemPayload({ ...item.toObject(), ...req.body }, { partial: true });
 
-  item.title = payload.title ?? item.title;
-  item.description = payload.description ?? item.description;
-  item.notes = payload.notes ?? item.notes;
-  item.category = payload.category ?? item.category;
-  item.condition = payload.condition ?? item.condition;
+  if (!isStatusOnlyUpdate) {
+    item.title = payload.title ?? item.title;
+    item.description = payload.description ?? item.description;
+    item.notes = payload.notes ?? item.notes;
+    item.category = payload.category ?? item.category;
+    item.condition = payload.condition ?? item.condition;
+  }
 
   if (typeof payload.isActive === "boolean") {
-    if (payload.isActive && item.hiddenByAdmin) {
-      throw createHttpError(403, "Items hidden by an admin cannot be reactivated by the owner.");
+    if (payload.isActive) {
+      ensureCanReactivateItem(item, { isOwner, isAdmin });
     }
 
     item.isActive = payload.isActive;
     item.hiddenAt = payload.isActive ? null : new Date();
     item.hiddenBy = payload.isActive ? null : req.user._id;
-    item.hiddenReason = payload.isActive ? "" : "owner-hidden";
+    item.hiddenByAdmin = payload.isActive ? false : isAdmin && !isOwner;
+    item.hiddenReason = payload.isActive ? "" : item.hiddenByAdmin ? "admin-hidden" : "owner-hidden";
   }
 
   await item.save();
@@ -209,6 +216,27 @@ function ensureDemoItemCanBeChanged(item) {
   if (item.isDemoItem) {
     throw createHttpError(403, "Protected demo items cannot be changed.");
   }
+}
+
+function ensureCanReactivateItem(item, actor) {
+  if (item.hiddenByAdmin || item.hiddenReason === "admin-hidden") {
+    if (!actor.isAdmin) {
+      throw createHttpError(403, "Only a community admin can reactivate items hidden by an admin.");
+    }
+
+    return;
+  }
+
+  if (item.hiddenReason === "owner-hidden") {
+    if (!actor.isOwner) {
+      throw createHttpError(403, "Only the item owner can reactivate items hidden by the owner.");
+    }
+  }
+}
+
+function isOnlyUpdatingStatus(payload) {
+  const keys = Object.keys(payload || {});
+  return keys.length === 1 && keys[0] === "isActive";
 }
 
 async function isCommunityAdmin(userId, communityId) {

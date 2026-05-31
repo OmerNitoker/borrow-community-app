@@ -108,7 +108,7 @@ function ItemDetailsPage() {
                 type="button"
               >
                 <Trash2 size={17} />
-                מחיקה
+                הסתרה
               </button>
             </div>
           ) : (
@@ -125,7 +125,7 @@ function ItemDetailsPage() {
             <EyeOff className="text-red-700" size={28} />
             <h2 className="mt-4 text-2xl font-bold">להסתיר את הפריט?</h2>
             <p className="mt-3 leading-7 text-slate-700">
-              המחיקה לא מוחקת את הפריט לגמרי, אלא הופכת אותו ללא פעיל ומסתירה אותו מהקטלוג.
+              הפריט לא יימחק מהמערכת, אלא יהפוך ללא פעיל ויוסתר מהקטלוג. מאחר שאתה מסתיר אותו בעצמך, רק אתה תוכל להחזיר אותו לפעילות.
             </p>
             <div className="mt-6 flex gap-3">
               <button

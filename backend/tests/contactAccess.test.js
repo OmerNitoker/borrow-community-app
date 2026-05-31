@@ -121,6 +121,46 @@ test("owners cannot reactivate items hidden by community admins", async () => {
   assert.equal(reactivated.status, 403);
 });
 
+test("community admins can reactivate items hidden by community admins", async () => {
+  const admin = await register("admin");
+  const owner = await register("owner");
+  const { community } = await createCommunity(admin.cookie, { requiredApproval: false });
+
+  await joinCommunity(owner.cookie, community.joinCode);
+
+  const { item } = await createItem(owner.cookie, community.id, "Owner item");
+
+  await request("DELETE", `/items/${item.id}`, { cookie: admin.cookie });
+
+  const reactivated = await request("PATCH", `/items/${item.id}`, {
+    cookie: admin.cookie,
+    body: { isActive: true }
+  });
+
+  assert.equal(reactivated.status, 200);
+  assert.equal(reactivated.body.item.isActive, true);
+  assert.equal(reactivated.body.item.hiddenByAdmin, false);
+});
+
+test("community admins cannot reactivate items hidden by the owner", async () => {
+  const admin = await register("admin");
+  const owner = await register("owner");
+  const { community } = await createCommunity(admin.cookie, { requiredApproval: false });
+
+  await joinCommunity(owner.cookie, community.joinCode);
+
+  const { item } = await createItem(owner.cookie, community.id, "Owner item");
+
+  await request("DELETE", `/items/${item.id}`, { cookie: owner.cookie });
+
+  const reactivated = await request("PATCH", `/items/${item.id}`, {
+    cookie: admin.cookie,
+    body: { isActive: true }
+  });
+
+  assert.equal(reactivated.status, 403);
+});
+
 test("protected demo items cannot be changed", async () => {
   const user = await register("demo-user");
   const { community } = await createCommunity(user.cookie, { requiredApproval: false });

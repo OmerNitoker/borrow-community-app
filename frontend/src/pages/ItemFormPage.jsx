@@ -2,6 +2,7 @@ import { ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { addItemImages, createItem, deleteItemImage, getItem, updateItem } from "../api/itemApi.js";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { itemCategories, itemConditions } from "../constants/itemOptions.js";
 
@@ -26,6 +27,7 @@ function ItemFormPage({ mode }) {
   const [isLoading, setIsLoading] = useState(isEdit);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [busyImageId, setBusyImageId] = useState("");
+  const [showHideConfirm, setShowHideConfirm] = useState(false);
 
   useEffect(() => {
     if (!isEdit) {
@@ -63,6 +65,16 @@ function ItemFormPage({ mode }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (isEdit && existingItem?.isActive && !form.isActive) {
+      setShowHideConfirm(true);
+      return;
+    }
+
+    await saveItem();
+  }
+
+  async function saveItem() {
     setError("");
     setSuccess("");
     setIsSubmitting(true);
@@ -87,6 +99,7 @@ function ItemFormPage({ mode }) {
       setError(err.message);
     } finally {
       setIsSubmitting(false);
+      setShowHideConfirm(false);
     }
   }
 
@@ -120,7 +133,7 @@ function ItemFormPage({ mode }) {
 
         {existingItem?.hiddenByAdmin ? (
           <p className="mt-4 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            הפריט הוסתר על ידי מנהל קהילה ולכן אי אפשר להחזיר אותו לפעיל.
+            הפריט הוסתר על ידי מנהל קהילה ולכן רק מנהל קהילה יכול להחזיר אותו לפעילות.
           </p>
         ) : null}
 
@@ -224,6 +237,17 @@ function ItemFormPage({ mode }) {
           </div>
         </form>
       </div>
+
+      {showHideConfirm ? (
+        <ConfirmDialog
+          confirmText="כן, להסתיר"
+          isLoading={isSubmitting}
+          onCancel={() => setShowHideConfirm(false)}
+          onConfirm={saveItem}
+          text={`${form.title} יוסתר מהקטלוג. מאחר שאתה מסתיר אותו בעצמך, רק אתה תוכל להחזיר אותו לפעילות.`}
+          title="להסתיר את הפריט?"
+        />
+      ) : null}
     </section>
   );
 }
