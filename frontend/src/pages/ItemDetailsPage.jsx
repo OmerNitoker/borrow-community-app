@@ -1,7 +1,8 @@
-import { ArrowRight, Edit, EyeOff, Loader2, Phone, Trash2 } from "lucide-react";
+import { ArrowRight, Edit, EyeOff, Phone, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { getItem, hideItem } from "../api/itemApi.js";
+import { getItem, hideItem, updateItem } from "../api/itemApi.js";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { getConditionLabel } from "../constants/itemOptions.js";
 import { getItemImageUrl } from "../utils/itemImages.js";
@@ -12,17 +13,20 @@ function ItemDetailsPage() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  async function loadItem() {
+    const itemData = await getItem(itemId);
+    setData(itemData);
+  }
 
   useEffect(() => {
-    getItem(itemId)
-      .then(setData)
-      .catch((err) => setError(err.message));
+    loadItem().catch((err) => setError(err.message));
   }, [itemId]);
 
-  async function handleDelete() {
-    setIsDeleting(true);
+  async function handleOwnerHide() {
+    setIsUpdatingStatus(true);
     setError("");
 
     try {
@@ -30,7 +34,37 @@ function ItemDetailsPage() {
       navigate(`/communities/${communityId}`);
     } catch (err) {
       setError(err.message);
-      setIsDeleting(false);
+      setIsUpdatingStatus(false);
+    }
+  }
+
+  async function handleAdminHide() {
+    setIsUpdatingStatus(true);
+    setError("");
+
+    try {
+      await hideItem(itemId, { asAdmin: true });
+      await loadItem();
+      setConfirmAction(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  }
+
+  async function handleAdminReactivate() {
+    setIsUpdatingStatus(true);
+    setError("");
+
+    try {
+      await updateItem(itemId, { isActive: true });
+      await loadItem();
+      setConfirmAction(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsUpdatingStatus(false);
     }
   }
 
@@ -44,6 +78,8 @@ function ItemDetailsPage() {
 
   const image = getItemImageUrl(data.item);
   const missingCount = Math.max(0, data.viewer.requiredActiveItemCount - data.viewer.activeItemCount);
+  const canAdminReactivate = data.viewer.isCommunityAdmin && !data.item.isActive && data.item.hiddenByAdmin;
+  const canShowAdminActions = data.viewer.isCommunityAdmin && (!data.viewer.isOwner || canAdminReactivate);
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-10">
@@ -94,61 +130,126 @@ function ItemDetailsPage() {
           ) : null}
 
           {data.viewer.isOwner ? (
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
-                to={`/communities/${communityId}/items/${itemId}/edit`}
-              >
-                <Edit size={17} />
-                עריכה
-              </Link>
-              <button
-                className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
-                onClick={() => setShowConfirm(true)}
-                type="button"
-              >
-                <Trash2 size={17} />
-                הסתרה
-              </button>
-            </div>
+            <OwnerActions data={data} itemId={itemId} communityId={communityId} onConfirmAction={setConfirmAction} />
           ) : (
             <ContactPanel data={data} missingCount={missingCount} communityId={communityId} />
           )}
+
+          {canShowAdminActions ? (
+            <AdminModerationActions item={data.item} onConfirmAction={setConfirmAction} />
+          ) : null}
 
           {error ? <p className="mt-5 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
         </section>
       </div>
 
-      {showConfirm ? (
-        <div className="fixed inset-0 z-20 grid place-items-center bg-slate-950/40 px-5">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <EyeOff className="text-red-700" size={28} />
-            <h2 className="mt-4 text-2xl font-bold">להסתיר את הפריט?</h2>
-            <p className="mt-3 leading-7 text-slate-700">
-              הפריט לא יימחק מהמערכת, אלא יהפוך ללא פעיל ויוסתר מהקטלוג. מאחר שאתה מסתיר אותו בעצמך, רק אתה תוכל להחזיר אותו לפעילות.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                className="inline-flex items-center gap-2 rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 disabled:bg-slate-400"
-                disabled={isDeleting}
-                onClick={handleDelete}
-                type="button"
-              >
-                {isDeleting ? <Loader2 className="animate-spin" size={17} /> : <Trash2 size={17} />}
-                כן, להסתיר
-              </button>
-              <button
-                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-100"
-                onClick={() => setShowConfirm(false)}
-                type="button"
-              >
-                ביטול
-              </button>
-            </div>
-          </div>
-        </div>
+      {confirmAction ? (
+        <ConfirmDialog
+          confirmText={confirmAction.confirmText}
+          isLoading={isUpdatingStatus}
+          onCancel={() => setConfirmAction(null)}
+          onConfirm={
+            confirmAction.type === "owner-hide"
+              ? handleOwnerHide
+              : confirmAction.type === "admin-hide"
+                ? handleAdminHide
+                : handleAdminReactivate
+          }
+          text={confirmAction.text}
+          title={confirmAction.title}
+          tone={confirmAction.tone}
+        />
       ) : null}
     </section>
+  );
+}
+
+function OwnerActions({ communityId, data, itemId, onConfirmAction }) {
+  if (!data.item.isActive) {
+    return (
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link
+          className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+          to={`/communities/${communityId}/items/${itemId}/edit`}
+        >
+          <Edit size={17} />
+          עריכה
+        </Link>
+      </div>
+    );
+  }
+
+  const hideAsAdmin = data.viewer.isCommunityAdmin;
+
+  return (
+    <div className="mt-6 flex flex-wrap gap-3">
+      <Link
+        className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+        to={`/communities/${communityId}/items/${itemId}/edit`}
+      >
+        <Edit size={17} />
+        עריכה
+      </Link>
+      <button
+        className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+        onClick={() =>
+          onConfirmAction({
+            type: hideAsAdmin ? "admin-hide" : "owner-hide",
+            title: "להסתיר את הפריט?",
+            text: hideAsAdmin
+              ? `${data.item.title} יוסתר מהקטלוג. מאחר שהפעולה מתבצעת כמנהל, רק מנהל קהילה יוכל להחזיר אותו לפעילות.`
+              : "הפריט לא יימחק מהמערכת, אלא יהפוך ללא פעיל ויוסתר מהקטלוג. מאחר שאתה מסתיר אותו בעצמך, רק אתה תוכל להחזיר אותו לפעילות.",
+            confirmText: "כן, להסתיר"
+          })
+        }
+        type="button"
+      >
+        <Trash2 size={17} />
+        הסתרה
+      </button>
+    </div>
+  );
+}
+
+function AdminModerationActions({ item, onConfirmAction }) {
+  return (
+    <div className="mt-6 rounded-md border border-slate-200 bg-white p-4">
+      <p className="text-sm font-bold text-slate-700">פעולות מנהל</p>
+      {!item.isActive && item.hiddenByAdmin ? (
+        <button
+          className="mt-3 inline-flex items-center gap-2 rounded-md border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-100"
+          onClick={() =>
+            onConfirmAction({
+              type: "admin-reactivate",
+              title: "להחזיר את הפריט לפעילות?",
+              text: `${item.title} יחזור להופיע בקטלוג הקהילה.`,
+              confirmText: "כן, להחזיר",
+              tone: "success"
+            })
+          }
+          type="button"
+        >
+          <RotateCcw size={17} />
+          החזרה לפעילות
+        </button>
+      ) : item.isActive ? (
+        <button
+          className="mt-3 inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+          onClick={() =>
+            onConfirmAction({
+              type: "admin-hide",
+              title: "להסתיר את הפריט?",
+              text: `${item.title} יוסתר מהקטלוג. מאחר שהפעולה מתבצעת כמנהל, רק מנהל קהילה יוכל להחזיר אותו לפעילות.`,
+              confirmText: "כן, להסתיר"
+            })
+          }
+          type="button"
+        >
+          <EyeOff size={17} />
+          הסתרת פריט
+        </button>
+      ) : null}
+    </div>
   );
 }
 
