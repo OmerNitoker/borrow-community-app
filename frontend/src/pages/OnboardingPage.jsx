@@ -1,7 +1,8 @@
-import { ArrowLeft, Boxes, Loader2, Plus, Users } from "lucide-react";
+import { Boxes, Loader2, Plus, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { createCommunity, joinCommunity } from "../api/communityApi.js";
+import DemoEntryActions from "../components/DemoEntryActions.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function OnboardingPage() {
@@ -49,12 +50,12 @@ function OnboardingPage() {
     }
   }
 
-  async function handleDemo() {
+  async function handleDemo(mode) {
     setError("");
-    setIsSubmitting("demo");
+    setIsSubmitting(`demo-${mode}`);
 
     try {
-      const data = await startDemo();
+      const data = await startDemo(mode);
       await refreshMemberships();
       navigate(`/communities/${data.community.id}`);
     } catch (err) {
@@ -129,19 +130,9 @@ function OnboardingPage() {
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <Boxes className="text-teal-700" size={28} />
           <h2 className="mt-4 text-xl font-bold">כניסה לקהילת דמו</h2>
-          <p className="mt-3 leading-7 text-slate-600">
-            קהילה מוכנה עם משתמש, פריטים ודאטה לדוגמה. מתאים לבדיקה מהירה ולתצוגה למגייסים.
-          </p>
-          <button
-            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
-            disabled={Boolean(isSubmitting)}
-            onClick={handleDemo}
-            type="button"
-          >
-            {isSubmitting === "demo" ? <Loader2 className="animate-spin" size={18} /> : null}
-            כניסה לדמו
-            <ArrowLeft size={18} />
-          </button>
+          <div className="mt-4">
+            <DemoEntryActions isSubmitting={isSubmitting} onSelect={handleDemo} />
+          </div>
         </section>
       </div>
     </section>

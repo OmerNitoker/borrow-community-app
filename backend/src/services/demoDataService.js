@@ -5,11 +5,17 @@ import { Membership } from "../models/Membership.js";
 import { User } from "../models/User.js";
 
 const demoPassword = "demo123456";
-const demoUserEmail = "demo@borrow.local";
+const demoAdminEmail = "demo-admin@borrow.local";
+const demoMemberEmail = "demo-member@borrow.local";
 const demoJoinCode = "DEMO2026";
+const demoEntryEmails = {
+  admin: demoAdminEmail,
+  member: demoMemberEmail
+};
 
-const demoUsers = [
-  { name: "משתמש דמו", email: demoUserEmail, phone: "050-123-4567", role: "admin" },
+const approvedDemoUsers = [
+  { name: "מנהל דמו", email: demoAdminEmail, phone: "050-123-4567", role: "admin" },
+  { name: "חבר דמו", email: demoMemberEmail, phone: "050-123-4568", role: "member" },
   { name: "נועה לוי", email: "noa@borrow.local", phone: "050-201-1001", role: "member" },
   { name: "יואב כהן", email: "yoav@borrow.local", phone: "050-201-1002", role: "member" },
   { name: "מיכל אברהם", email: "michal@borrow.local", phone: "050-201-1003", role: "member" },
@@ -21,11 +27,19 @@ const demoUsers = [
   { name: "שירה דיין", email: "shira@borrow.local", phone: "050-201-1009", role: "member" }
 ];
 
+const pendingDemoUsers = [
+  { name: "ליאור סגל", email: "pending-lior@borrow.local", phone: "050-301-2001" },
+  { name: "הילה רוזן", email: "pending-hila@borrow.local", phone: "050-301-2002" },
+  { name: "אורי נבון", email: "pending-uri@borrow.local", phone: "050-301-2003" }
+];
+
+const allDemoUsers = [...approvedDemoUsers, ...pendingDemoUsers];
+
 const demoItems = [
-  item(demoUserEmail, "מחצלת גדולה", "מחצלת מתקפלת לפיקניקים וים.", "ציוד טיולים", "good", "נא לנער חול לפני ההחזרה."),
-  item(demoUserEmail, "מברגה נטענת", "מברגה ביתית עם סוללה ומטען.", "כלי עבודה", "good", "כוללת ביטים בסיסיים."),
-  item(demoUserEmail, "צידנית משפחתית", "צידנית קשיחה לטיולים וים.", "ציוד טיולים", "used", "מתאימה לבקבוקים וקרחונים."),
-  item(demoUserEmail, "ערכת קפה", "פקל קפה קטן עם גזיה, פינג'ן וכוסות.", "ציוד טיולים", "good", "לא כולל בלון גז."),
+  item(demoMemberEmail, "מחצלת גדולה", "מחצלת מתקפלת לפיקניקים וים.", "ציוד טיולים", "good", "נא לנער חול לפני ההחזרה."),
+  item(demoMemberEmail, "מברגה נטענת", "מברגה ביתית עם סוללה ומטען.", "כלי עבודה", "good", "כוללת ביטים בסיסיים."),
+  item(demoAdminEmail, "צידנית משפחתית", "צידנית קשיחה לטיולים וים.", "ציוד טיולים", "used", "מתאימה לבקבוקים וקרחונים."),
+  item(demoAdminEmail, "ערכת קפה", "פקל קפה קטן עם גזיה, פינג'ן וכוסות.", "ציוד טיולים", "good", "לא כולל בלון גז."),
   item("noa@borrow.local", "מכסחת דשא", "מכסחת חשמלית לחצר קטנה או בינונית.", "כלי עבודה", "used", "יש להחזיר נקיה מדשא."),
   item("noa@borrow.local", "תבנית קוגלהוף", "תבנית אפייה איכותית לעוגות.", "כלי מטבח", "good", ""),
   item("noa@borrow.local", "שולחן מתקפל", "שולחן פלסטיק מתקפל לאירוח.", "ציוד לאירועים", "good", "מתאים ל-6 אנשים."),
@@ -74,7 +88,7 @@ const demoItems = [
   item("shira@borrow.local", "מצלמת אקסטרים", "מצלמת אקשן קטנה לטיולים.", "אחר", "used", "כולל כרטיס זיכרון קטן.")
 ];
 
-export async function seedDemoData({ reset = false } = {}) {
+export async function seedDemoData({ reset = false, entryMode = "member" } = {}) {
   if (reset) {
     const existingDemoUsers = await User.find({ isDemoUser: true }).select("_id");
     const existingDemoCommunities = await Community.find({ isDemoCommunity: true }).select("_id");
@@ -89,12 +103,14 @@ export async function seedDemoData({ reset = false } = {}) {
     });
     await Community.deleteMany({ isDemoCommunity: true });
     await User.deleteMany({ isDemoUser: true });
+  } else {
+    await removeObsoleteDemoUsers();
   }
 
   const passwordHash = await bcrypt.hash(demoPassword, 12);
   const usersByEmail = new Map();
 
-  for (const demoUser of demoUsers) {
+  for (const demoUser of allDemoUsers) {
     const user = await User.findOneAndUpdate(
       { email: demoUser.email },
       {
@@ -110,7 +126,8 @@ export async function seedDemoData({ reset = false } = {}) {
     usersByEmail.set(demoUser.email, user);
   }
 
-  const connectedDemoUser = usersByEmail.get(demoUserEmail);
+  const adminUser = usersByEmail.get(demoAdminEmail);
+  const memberUser = usersByEmail.get(demoMemberEmail);
 
   const community = await Community.findOneAndUpdate(
     { joinCode: demoJoinCode },
@@ -119,14 +136,14 @@ export async function seedDemoData({ reset = false } = {}) {
       description: "קהילה לדוגמה שמציגה קטלוג עשיר, חברות והרשאות קשר.",
       joinCode: demoJoinCode,
       requiredApproval: true,
-      createdBy: connectedDemoUser._id,
+      createdBy: adminUser._id,
       isDemoCommunity: true,
       imageUrl: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80"
     },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  for (const demoUser of demoUsers) {
+  for (const demoUser of approvedDemoUsers) {
     const user = usersByEmail.get(demoUser.email);
 
     await Membership.findOneAndUpdate(
@@ -141,12 +158,27 @@ export async function seedDemoData({ reset = false } = {}) {
     );
   }
 
-  const existingDemoItemCount = await Item.countDocuments({
-    community: community._id,
-    isDemoItem: true
-  });
+  for (const pendingUser of pendingDemoUsers) {
+    const user = usersByEmail.get(pendingUser.email);
 
-  if (existingDemoItemCount !== demoItems.length) {
+    await Membership.findOneAndUpdate(
+      { user: user._id, community: community._id },
+      {
+        user: user._id,
+        community: community._id,
+        status: "pending",
+        role: "member"
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+  }
+
+  const [existingDemoItemCount, memberActiveItemCount] = await Promise.all([
+    Item.countDocuments({ community: community._id, isDemoItem: true }),
+    Item.countDocuments({ community: community._id, owner: memberUser._id, isDemoItem: true, isActive: true })
+  ]);
+
+  if (existingDemoItemCount !== demoItems.length || memberActiveItemCount !== 2) {
     await Item.deleteMany({ community: community._id, isDemoItem: true });
     await Item.insertMany(
       demoItems.map((demoItem, index) => ({
@@ -161,7 +193,27 @@ export async function seedDemoData({ reset = false } = {}) {
     );
   }
 
-  return { user: connectedDemoUser, community };
+  const entryEmail = demoEntryEmails[entryMode] || demoEntryEmails.member;
+
+  return { user: usersByEmail.get(entryEmail), community };
+}
+
+async function removeObsoleteDemoUsers() {
+  const activeDemoEmails = allDemoUsers.map((user) => user.email);
+  const obsoleteDemoUsers = await User.find({
+    isDemoUser: true,
+    email: { $nin: activeDemoEmails }
+  }).select("_id");
+
+  if (obsoleteDemoUsers.length === 0) {
+    return;
+  }
+
+  const obsoleteUserIds = obsoleteDemoUsers.map((user) => user._id);
+
+  await Item.deleteMany({ owner: { $in: obsoleteUserIds } });
+  await Membership.deleteMany({ user: { $in: obsoleteUserIds } });
+  await User.deleteMany({ _id: { $in: obsoleteUserIds } });
 }
 
 function item(ownerEmail, title, description, category, condition, notes) {

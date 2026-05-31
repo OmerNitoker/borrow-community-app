@@ -4,8 +4,16 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { authCookieName, getAuthCookieOptions } from "../utils/cookies.js";
 import { sanitizeUser } from "../utils/sanitizeUser.js";
 
-export const enterDemo = asyncHandler(async (req, res) => {
-  const { user, community } = await seedDemoData();
+export const enterDemoAsMember = asyncHandler(async (req, res) => {
+  await enterDemo(req, res, "member");
+});
+
+export const enterDemoAsAdmin = asyncHandler(async (req, res) => {
+  await enterDemo(req, res, "admin");
+});
+
+async function enterDemo(req, res, entryMode) {
+  const { user, community } = await seedDemoData({ entryMode });
   const token = createAuthToken(user);
 
   res.cookie(authCookieName, token, getAuthCookieOptions());
@@ -21,4 +29,4 @@ export const enterDemo = asyncHandler(async (req, res) => {
       isDemoCommunity: community.isDemoCommunity
     }
   });
-});
+}

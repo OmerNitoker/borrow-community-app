@@ -1,7 +1,7 @@
 import { apiRequest } from "./apiClient.js";
 
-export function enterDemo() {
-  return apiRequest("/demo/enter", {
+export function enterDemo(mode = "member") {
+  return apiRequest(`/demo/enter/${mode}`, {
     method: "POST"
   });
 }

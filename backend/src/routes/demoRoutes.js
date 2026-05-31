@@ -1,8 +1,10 @@
 import express from "express";
-import { enterDemo } from "../controllers/demoController.js";
+import { enterDemoAsAdmin, enterDemoAsMember } from "../controllers/demoController.js";
 
 const router = express.Router();
 
-router.post("/enter", enterDemo);
+router.post("/enter", enterDemoAsMember);
+router.post("/enter/member", enterDemoAsMember);
+router.post("/enter/admin", enterDemoAsAdmin);
 
 export default router;

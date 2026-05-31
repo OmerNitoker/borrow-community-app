@@ -1,7 +1,8 @@
-import { ArrowLeft, Clock, Loader2, X } from "lucide-react";
+import { Clock, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { cancelPendingMembership } from "../api/membershipApi.js";
+import DemoEntryActions from "../components/DemoEntryActions.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -33,12 +34,12 @@ function PendingApprovalPage() {
     }
   }
 
-  async function handleDemo() {
+  async function handleDemo(mode) {
     setError("");
-    setIsSubmitting("demo");
+    setIsSubmitting(`demo-${mode}`);
 
     try {
-      const data = await startDemo();
+      const data = await startDemo(mode);
       await refreshMemberships();
       navigate(`/communities/${data.community.id}`);
     } catch (err) {
@@ -90,16 +91,10 @@ function PendingApprovalPage() {
           >
             קהילה אחרת
           </Link>
-          <button
-            className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-            disabled={Boolean(isSubmitting)}
-            onClick={handleDemo}
-            type="button"
-          >
-            {isSubmitting === "demo" ? <Loader2 className="animate-spin" size={17} /> : null}
-            כניסה לדמו
-            <ArrowLeft size={17} />
-          </button>
+        </div>
+
+        <div className="mt-7 rounded-md bg-slate-50 p-4">
+          <DemoEntryActions isSubmitting={isSubmitting} onSelect={handleDemo} />
         </div>
       </div>
     </section>

@@ -28,8 +28,8 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  async function startDemo() {
-    const data = await enterDemo();
+  async function startDemo(mode = "member") {
+    const data = await enterDemo(mode);
     setUser(data.user);
     setDemoCommunity(data.community);
     return data;

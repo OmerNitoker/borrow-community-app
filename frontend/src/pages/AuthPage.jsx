@@ -1,6 +1,7 @@
-import { ArrowLeft, Boxes, Image, Loader2, ShieldCheck, Users } from "lucide-react";
+import { Boxes, Image, Loader2, ShieldCheck, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import DemoEntryActions from "../components/DemoEntryActions.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const highlights = [
@@ -81,7 +82,7 @@ function AuthPanel() {
     phone: ""
   });
   const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState("");
 
   function updateField(event) {
     setForm((current) => ({
@@ -93,7 +94,7 @@ function AuthPanel() {
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
-    setIsSubmitting(true);
+    setIsSubmitting("auth");
 
     try {
       if (mode === "login") {
@@ -106,21 +107,21 @@ function AuthPanel() {
     } catch (err) {
       setError(err.message);
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting("");
     }
   }
 
-  async function handleDemo() {
+  async function handleDemo(mode) {
     setError("");
-    setIsSubmitting(true);
+    setIsSubmitting(`demo-${mode}`);
 
     try {
-      const data = await startDemo();
+      const data = await startDemo(mode);
       navigate(`/communities/${data.community.id}`);
     } catch (err) {
       setError(err.message);
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting("");
     }
   }
 
@@ -158,25 +159,19 @@ function AuthPanel() {
 
         <button
           className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-          disabled={isSubmitting}
+          disabled={Boolean(isSubmitting)}
           type="submit"
         >
-          {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : null}
+          {isSubmitting === "auth" ? <Loader2 className="animate-spin" size={18} /> : null}
           {mode === "login" ? "התחברות" : "יצירת חשבון"}
         </button>
       </form>
 
       <div className="my-5 h-px bg-slate-200" />
 
-      <button
-        className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
-        disabled={isSubmitting}
-        onClick={handleDemo}
-        type="button"
-      >
-        כניסה לדמו
-        <ArrowLeft size={18} />
-      </button>
+      <div className="rounded-md bg-slate-50 p-4">
+        <DemoEntryActions isSubmitting={isSubmitting} onSelect={handleDemo} />
+      </div>
     </section>
   );
 }

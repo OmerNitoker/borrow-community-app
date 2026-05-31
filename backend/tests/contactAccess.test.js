@@ -177,6 +177,43 @@ test("the fixed demo user can hide their own demo items for fairness testing", a
   assert.equal(response.body.item.hiddenReason, "owner-hidden");
 });
 
+test("member demo entry starts locked with exactly 2 active items", async () => {
+  const response = await request("POST", "/demo/enter/member");
+  const communityId = response.body.community.id;
+  const member = await User.findOne({ email: "demo-member@borrow.local" });
+  const memberItemCount = await Item.countDocuments({ community: communityId, owner: member._id, isActive: true });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.user.email, "demo-member@borrow.local");
+  assert.equal(memberItemCount, 2);
+
+  const catalog = await request("GET", `/communities/${communityId}/items`, { cookie: response.cookie });
+
+  assert.equal(catalog.status, 200);
+  assert.equal(catalog.body.accessStatus.activeItemCount, 2);
+  assert.equal(catalog.body.accessStatus.canViewContact, false);
+
+  const otherItem = await Item.findOne({ community: communityId, owner: { $ne: member._id }, isActive: true });
+  const detail = await request("GET", `/items/${otherItem._id}`, { cookie: response.cookie });
+
+  assert.equal(detail.status, 200);
+  assert.equal(detail.body.ownerContact, null);
+});
+
+test("admin demo entry opens dashboard with pending requests", async () => {
+  const response = await request("POST", "/demo/enter/admin");
+  const communityId = response.body.community.id;
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.user.email, "demo-admin@borrow.local");
+
+  const overview = await request("GET", `/admin/community/${communityId}/overview`, { cookie: response.cookie });
+
+  assert.equal(overview.status, 200);
+  assert.equal(overview.body.pendingMembers.length, 3);
+  assert.ok(overview.body.members.some((member) => member.user.email === "demo-admin@borrow.local"));
+});
+
 async function register(name) {
   const response = await request("POST", "/auth/register", {
     body: {
