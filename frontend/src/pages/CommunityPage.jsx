@@ -91,6 +91,10 @@ function CommunityPage() {
       </div>
 
       <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-3 flex min-h-5 items-center justify-between gap-3">
+          <p className="text-sm font-semibold text-slate-700">חיפוש וסינון</p>
+          {isItemsLoading ? <p className="text-sm text-teal-700">מעדכן תוצאות...</p> : null}
+        </div>
         <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">
           <label className="relative block">
             <Search className="absolute right-3 top-3.5 text-slate-400" size={18} />
@@ -129,11 +133,7 @@ function CommunityPage() {
       </section>
 
       <section className="mt-6 grid gap-4 md:grid-cols-3">
-        {isItemsLoading ? (
-          <div className="rounded-lg border border-slate-200 bg-white p-6 text-slate-600 md:col-span-3">
-            מעדכן תוצאות...
-          </div>
-        ) : itemsData.items.length === 0 ? (
+        {itemsData.items.length === 0 ? (
           <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-slate-600 md:col-span-3">
             עדיין אין פריטים פעילים בקהילה.
           </div>
