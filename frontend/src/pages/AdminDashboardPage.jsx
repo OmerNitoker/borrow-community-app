@@ -140,7 +140,7 @@ function AdminDashboardPage() {
                     </p>
                   </div>
                 </div>
-                {item.isActive && !item.isDemoItem ? (
+                {item.isActive ? (
                   <button
                     className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:text-red-300"
                     disabled={Boolean(busyId)}
@@ -150,8 +150,6 @@ function AdminDashboardPage() {
                     {busyId === item.id ? <Loader2 className="animate-spin" size={16} /> : <EyeOff size={16} />}
                     הסתרה
                   </button>
-                ) : item.isDemoItem ? (
-                  <span className="rounded-full bg-teal-50 px-3 py-1 text-sm font-semibold text-teal-800">דמו מוגן</span>
                 ) : null}
               </div>
             ))

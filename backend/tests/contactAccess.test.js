@@ -214,6 +214,49 @@ test("admin demo entry opens dashboard with pending requests", async () => {
   assert.ok(overview.body.members.some((member) => member.user.email === "demo-admin@borrow.local"));
 });
 
+test("demo admin membership decisions persist until demo reset", async () => {
+  const response = await request("POST", "/demo/enter/admin");
+  const communityId = response.body.community.id;
+  const initialOverview = await request("GET", `/admin/community/${communityId}/overview`, { cookie: response.cookie });
+  const [approvedRequest, rejectedRequest] = initialOverview.body.pendingMembers;
+
+  await request("PATCH", `/memberships/${approvedRequest.id}/approve`, { cookie: response.cookie });
+  await request("PATCH", `/memberships/${rejectedRequest.id}/reject`, { cookie: response.cookie });
+
+  const reentered = await request("POST", "/demo/enter/admin");
+  const updatedOverview = await request("GET", `/admin/community/${communityId}/overview`, { cookie: reentered.cookie });
+
+  assert.equal(updatedOverview.status, 200);
+  assert.equal(updatedOverview.body.pendingMembers.length, 1);
+  assert.ok(updatedOverview.body.members.some((member) => member.id === approvedRequest.id));
+  assert.ok(!updatedOverview.body.pendingMembers.some((member) => member.id === rejectedRequest.id));
+});
+
+test("demo admin can hide demo items and the change persists until demo reset", async () => {
+  const response = await request("POST", "/demo/enter/admin");
+  const communityId = response.body.community.id;
+  const admin = await User.findOne({ email: "demo-admin@borrow.local" });
+  const item = await Item.findOne({
+    community: communityId,
+    owner: { $ne: admin._id },
+    isDemoItem: true,
+    isActive: true
+  });
+
+  const hidden = await request("DELETE", `/items/${item._id}`, { cookie: response.cookie });
+
+  assert.equal(hidden.status, 200);
+  assert.equal(hidden.body.item.isActive, false);
+  assert.equal(hidden.body.item.hiddenByAdmin, true);
+
+  await request("POST", "/demo/enter/admin");
+
+  const persistedItem = await Item.findById(item._id);
+
+  assert.equal(persistedItem.isActive, false);
+  assert.equal(persistedItem.hiddenByAdmin, true);
+});
+
 async function register(name) {
   const response = await request("POST", "/auth/register", {
     body: {

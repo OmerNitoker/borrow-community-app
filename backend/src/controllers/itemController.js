@@ -103,11 +103,11 @@ export const hideItem = asyncHandler(async (req, res) => {
 
   const isOwner = item.owner.toString() === req.user._id.toString();
 
-  if (item.isDemoItem && (!isOwner || !req.user.isDemoUser)) {
+  const isAdmin = await isCommunityAdmin(req.user._id, item.community);
+
+  if (item.isDemoItem && !isOwner && !isAdmin) {
     throw createHttpError(403, "Protected demo items cannot be hidden.");
   }
-
-  const isAdmin = await isCommunityAdmin(req.user._id, item.community);
 
   if (!isOwner && !isAdmin) {
     throw createHttpError(403, "Only the owner or a community admin can hide this item.");

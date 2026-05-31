@@ -161,24 +161,24 @@ export async function seedDemoData({ reset = false, entryMode = "member" } = {})
   for (const pendingUser of pendingDemoUsers) {
     const user = usersByEmail.get(pendingUser.email);
 
-    await Membership.findOneAndUpdate(
-      { user: user._id, community: community._id },
-      {
+    const existingMembership = await Membership.findOne({ user: user._id, community: community._id });
+
+    if (!existingMembership) {
+      await Membership.create({
         user: user._id,
         community: community._id,
         status: "pending",
         role: "member"
-      },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+      });
+    }
   }
 
-  const [existingDemoItemCount, memberActiveItemCount] = await Promise.all([
+  const [existingDemoItemCount, memberDemoItemCount] = await Promise.all([
     Item.countDocuments({ community: community._id, isDemoItem: true }),
-    Item.countDocuments({ community: community._id, owner: memberUser._id, isDemoItem: true, isActive: true })
+    Item.countDocuments({ community: community._id, owner: memberUser._id, isDemoItem: true })
   ]);
 
-  if (existingDemoItemCount !== demoItems.length || memberActiveItemCount !== 2) {
+  if (existingDemoItemCount !== demoItems.length || memberDemoItemCount !== 2) {
     await Item.deleteMany({ community: community._id, isDemoItem: true });
     await Item.insertMany(
       demoItems.map((demoItem, index) => ({
