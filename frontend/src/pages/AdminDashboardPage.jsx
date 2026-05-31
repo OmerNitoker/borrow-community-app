@@ -5,6 +5,7 @@ import { getCommunityOverview } from "../api/adminApi.js";
 import { approveMembership, rejectMembership } from "../api/membershipApi.js";
 import { hideItem } from "../api/itemApi.js";
 import LoadingScreen from "../components/LoadingScreen.jsx";
+import { getItemImageUrl } from "../utils/itemImages.js";
 
 function AdminDashboardPage() {
   const { communityId } = useParams();
@@ -130,11 +131,14 @@ function AdminDashboardPage() {
           ) : (
             overview.items.map((item) => (
               <div key={item.id} className="flex items-center justify-between gap-3 border-b border-slate-100 py-3">
-                <div>
-                  <p className="font-bold">{item.title}</p>
-                  <p className="text-sm text-slate-600">
-                    {item.owner.name} · {item.category} · <ItemStatus item={item} />
-                  </p>
+                <div className="flex items-center gap-3">
+                  <img alt="" className="h-14 w-14 rounded-md object-cover" src={getItemImageUrl(item)} />
+                  <div>
+                    <p className="font-bold">{item.title}</p>
+                    <p className="text-sm text-slate-600">
+                      {item.owner.name} · {item.category} · <ItemStatus item={item} />
+                    </p>
+                  </div>
                 </div>
                 {item.isActive && !item.isDemoItem ? (
                   <button

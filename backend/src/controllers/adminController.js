@@ -29,6 +29,7 @@ export const getCommunityOverview = asyncHandler(async (req, res) => {
       id: item._id.toString(),
       title: item.title,
       category: item.category,
+      imageUrl: item.images[0]?.url || "",
       isActive: item.isActive,
       hiddenByAdmin: item.hiddenByAdmin,
       hiddenReason: item.hiddenReason,

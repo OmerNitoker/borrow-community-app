@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { getItem, hideItem } from "../api/itemApi.js";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { getConditionLabel } from "../constants/itemOptions.js";
+import { getItemImageUrl } from "../utils/itemImages.js";
 
 function ItemDetailsPage() {
   const { communityId, itemId } = useParams();
@@ -41,7 +42,7 @@ function ItemDetailsPage() {
     return <LoadingScreen />;
   }
 
-  const image = data.item.images[0]?.url;
+  const image = getItemImageUrl(data.item);
   const missingCount = Math.max(0, data.viewer.requiredActiveItemCount - data.viewer.activeItemCount);
 
   return (
@@ -56,7 +57,7 @@ function ItemDetailsPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          {image ? <img alt="" className="h-96 w-full object-cover" src={image} /> : <div className="h-96 bg-slate-100" />}
+          <img alt="" className="h-96 w-full object-cover" src={image} />
           {data.item.images.length > 1 ? (
             <div className="grid grid-cols-3 gap-2 p-3">
               {data.item.images.map((currentImage) => (

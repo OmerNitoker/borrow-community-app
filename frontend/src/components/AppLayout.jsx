@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate, useParams } from "react-router-dom";
 import { getMyCommunities } from "../api/communityApi.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import DemoBadge from "./DemoBadge.jsx";
 
 function AppLayout() {
   const { user, logout } = useAuth();
@@ -35,6 +36,11 @@ function AppLayout() {
               Borrow
             </Link>
             <h1 className="text-xl font-bold">שלום, {user.name}</h1>
+            {user.isDemoUser ? (
+              <div className="mt-2">
+                <DemoBadge />
+              </div>
+            ) : null}
           </div>
 
           <nav className="flex flex-wrap items-center gap-2">

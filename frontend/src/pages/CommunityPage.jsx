@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { getCommunity, getCommunityItems } from "../api/communityApi.js";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { itemCategories } from "../constants/itemOptions.js";
+import { getItemImageUrl } from "../utils/itemImages.js";
 
 function CommunityPage() {
   const { communityId } = useParams();
@@ -143,11 +144,7 @@ function ItemCard({ communityId, item }) {
 
   return (
     <Link className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" to={`/communities/${communityId}/items/${item.id}`}>
-      {item.imageUrl ? (
-        <img alt="" className="h-40 w-full object-cover" src={item.imageUrl} />
-      ) : (
-        <div className="h-40 bg-slate-100" />
-      )}
+      <img alt="" className="h-40 w-full object-cover" src={getItemImageUrl(item)} />
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>

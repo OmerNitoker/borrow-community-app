@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { getMyItems, hideItem, updateItem } from "../api/itemApi.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { getItemImageUrl } from "../utils/itemImages.js";
 
 function ProfilePage() {
   const { user } = useAuth();
@@ -110,11 +111,7 @@ function ProfilePage() {
             {items.map((item) => (
               <div key={item.id} className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-3">
-                  {item.imageUrl ? (
-                    <img alt="" className="h-16 w-16 rounded-md object-cover" src={item.imageUrl} />
-                  ) : (
-                    <div className="h-16 w-16 rounded-md bg-slate-100" />
-                  )}
+                  <img alt="" className="h-16 w-16 rounded-md object-cover" src={getItemImageUrl(item)} />
                   <div>
                     <p className="font-bold">{item.title}</p>
                     <p className="text-sm text-slate-600">{item.communityName || item.category} · {item.category}</p>
