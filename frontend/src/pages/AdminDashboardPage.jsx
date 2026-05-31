@@ -1,6 +1,6 @@
-import { Check, EyeOff, Loader2, RotateCcw, Search, X } from "lucide-react";
+import { ArrowLeft, Check, EyeOff, Loader2, RotateCcw, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { getCommunityOverview } from "../api/adminApi.js";
 import { hideItem, updateItem } from "../api/itemApi.js";
 import { approveMembership, rejectMembership } from "../api/membershipApi.js";
@@ -134,8 +134,19 @@ function AdminDashboardPage() {
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-10">
-      <p className="text-sm font-semibold text-teal-700">ניהול קהילה</p>
-      <h1 className="mt-2 text-4xl font-bold">דשבורד מנהל</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-teal-700">ניהול קהילה</p>
+          <h1 className="mt-2 text-4xl font-bold">דשבורד מנהל</h1>
+        </div>
+        <Link
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100"
+          to={`/communities/${communityId}`}
+        >
+          מעבר לדף הקהילה
+          <ArrowLeft size={16} />
+        </Link>
+      </div>
 
       <div className="mt-6 grid gap-3 md:grid-cols-4">
         <Stat label="חברים" value={overview.stats.memberCount} />
