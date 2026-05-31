@@ -244,6 +244,8 @@ test("admin overview filters and limits item rows", async () => {
   });
 
   assert.equal(limited.status, 200);
+  assert.equal(limited.body.community.joinCode, community.joinCode);
+  assert.equal(limited.body.community.requiredApproval, false);
   assert.equal(limited.body.items.length, 6);
   assert.equal(limited.body.itemsPagination.totalItems, 8);
   assert.equal(limited.body.itemsPagination.hasMore, true);

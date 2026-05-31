@@ -1,9 +1,12 @@
+import { Community } from "../models/Community.js";
 import { Item } from "../models/Item.js";
 import { Membership } from "../models/Membership.js";
 import { User } from "../models/User.js";
 import { getCommunityStats } from "../services/communityService.js";
 import { requireCommunityAdmin } from "../services/membershipService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { createHttpError } from "../utils/createHttpError.js";
+import { mapCommunity } from "../utils/mapCommunity.js";
 import { mapMember } from "../utils/mapMember.js";
 
 export const getCommunityOverview = asyncHandler(async (req, res) => {
@@ -15,7 +18,8 @@ export const getCommunityOverview = asyncHandler(async (req, res) => {
   };
   const itemLimit = getItemLimit(req.query.itemLimit);
 
-  const [memberships, totalItemCount, activeItemCount, stats, filteredItemCount, items] = await Promise.all([
+  const [community, memberships, totalItemCount, activeItemCount, stats, filteredItemCount, items] = await Promise.all([
+    Community.findById(req.params.communityId),
     Membership.find({ community: req.params.communityId }).populate("user").sort({ status: 1, createdAt: -1 }),
     Item.countDocuments({ community: req.params.communityId }),
     Item.countDocuments({ community: req.params.communityId, isActive: true }),
@@ -24,7 +28,12 @@ export const getCommunityOverview = asyncHandler(async (req, res) => {
     Item.find(itemQuery).populate("owner", "name").sort({ createdAt: -1 }).limit(itemLimit)
   ]);
 
+  if (!community) {
+    throw createHttpError(404, "Community not found.");
+  }
+
   res.json({
+    community: mapCommunity(community),
     stats: {
       ...stats,
       totalItemCount,

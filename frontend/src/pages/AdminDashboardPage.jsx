@@ -5,6 +5,7 @@ import { getCommunityOverview } from "../api/adminApi.js";
 import { hideItem, updateItem } from "../api/itemApi.js";
 import { approveMembership, rejectMembership } from "../api/membershipApi.js";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
+import JoinCodeDisplay from "../components/JoinCodeDisplay.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { getItemImageUrl } from "../utils/itemImages.js";
 
@@ -147,6 +148,21 @@ function AdminDashboardPage() {
           <ArrowLeft size={16} />
         </Link>
       </div>
+
+      {overview.community ? (
+        <section className="mt-6 rounded-lg border border-teal-100 bg-teal-50 p-5 shadow-sm">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold text-teal-700">קוד הצטרפות לקהילה</p>
+            <h2 className="mt-1 text-xl font-bold">{overview.community.name}</h2>
+            <p className="mt-2 text-sm text-slate-600">אפשר לשתף את הקוד עם אנשים שרוצים להצטרף לקהילה.</p>
+          </div>
+          <JoinCodeDisplay
+            className="mt-4 max-w-3xl"
+            joinCode={overview.community.joinCode}
+            requiredApproval={overview.community.requiredApproval}
+          />
+        </section>
+      ) : null}
 
       <div className="mt-6 grid gap-3 md:grid-cols-4">
         <Stat label="חברים" value={overview.stats.memberCount} />

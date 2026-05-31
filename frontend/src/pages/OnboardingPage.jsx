@@ -1,8 +1,9 @@
-import { Boxes, Loader2, Plus, Users } from "lucide-react";
+import { ArrowLeft, Boxes, Loader2, Plus, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { createCommunity, joinCommunity } from "../api/communityApi.js";
 import DemoEntryActions from "../components/DemoEntryActions.jsx";
+import JoinCodeDisplay from "../components/JoinCodeDisplay.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function OnboardingPage() {
@@ -17,6 +18,7 @@ function OnboardingPage() {
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState("");
+  const [createdCommunity, setCreatedCommunity] = useState(null);
 
   async function handleJoin(event) {
     event.preventDefault();
@@ -42,7 +44,7 @@ function OnboardingPage() {
     try {
       const data = await createCommunity(communityForm);
       await refreshMemberships();
-      navigate(`/communities/${data.community.id}`);
+      setCreatedCommunity(data.community);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -135,7 +137,41 @@ function OnboardingPage() {
           </div>
         </section>
       </div>
+
+      {createdCommunity ? (
+        <CommunityCreatedModal
+          community={createdCommunity}
+          onContinue={() => navigate(`/communities/${createdCommunity.id}`)}
+        />
+      ) : null}
     </section>
+  );
+}
+
+function CommunityCreatedModal({ community, onContinue }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
+      <div className="w-full max-w-lg rounded-lg bg-white p-6 text-right shadow-2xl">
+        <p className="text-sm font-semibold text-teal-700">קהילה חדשה</p>
+        <h2 className="mt-2 text-2xl font-bold">הקהילה נוצרה בהצלחה!</h2>
+        <p className="mt-2 text-slate-600">שתף את קוד ההצטרפות עם חברי הקהילה</p>
+
+        <JoinCodeDisplay
+          className="mt-6 rounded-lg border border-teal-100 bg-teal-50 p-4"
+          joinCode={community.joinCode}
+          requiredApproval={community.requiredApproval}
+        />
+
+        <button
+          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-800"
+          onClick={onContinue}
+          type="button"
+        >
+          מעבר לדף הקהילה
+          <ArrowLeft size={17} />
+        </button>
+      </div>
+    </div>
   );
 }
 
