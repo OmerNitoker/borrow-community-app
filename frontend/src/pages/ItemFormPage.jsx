@@ -1,7 +1,7 @@
-import { ImagePlus, Loader2, Save } from "lucide-react";
+import { ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { addItemImages, createItem, getItem, updateItem } from "../api/itemApi.js";
+import { addItemImages, createItem, deleteItemImage, getItem, updateItem } from "../api/itemApi.js";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { itemCategories, itemConditions } from "../constants/itemOptions.js";
 
@@ -25,6 +25,7 @@ function ItemFormPage({ mode }) {
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(isEdit);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [busyImageId, setBusyImageId] = useState("");
 
   useEffect(() => {
     if (!isEdit) {
@@ -56,7 +57,8 @@ function ItemFormPage({ mode }) {
   }
 
   function updateFiles(event) {
-    setFiles(Array.from(event.target.files || []).slice(0, 3));
+    const maxAvailableSlots = Math.max(0, 3 - (existingItem?.images?.length || 0));
+    setFiles(Array.from(event.target.files || []).slice(0, isEdit ? maxAvailableSlots : 3));
   }
 
   async function handleSubmit(event) {
@@ -85,6 +87,21 @@ function ItemFormPage({ mode }) {
       setError(err.message);
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleDeleteImage(publicId) {
+    setError("");
+    setBusyImageId(publicId);
+
+    try {
+      const data = await deleteItemImage(itemId, publicId);
+      setExistingItem(data.item);
+      setSuccess("התמונה נמחקה בהצלחה.");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyImageId("");
     }
   }
 
@@ -131,11 +148,36 @@ function ItemFormPage({ mode }) {
 
           <TextArea label="הערות ותנאי השאלה" name="notes" onChange={updateField} value={form.notes} />
 
+          {isEdit && existingItem?.images?.length > 0 ? (
+            <section>
+              <p className="text-sm font-semibold text-slate-700">תמונות קיימות</p>
+              <div className="mt-2 grid gap-3 sm:grid-cols-3">
+                {existingItem.images.map((image) => (
+                  <div className="overflow-hidden rounded-md border border-slate-200 bg-slate-50" key={image.publicId || image.url}>
+                    <img alt="" className="h-28 w-full object-cover" src={image.url} />
+                    <button
+                      className="inline-flex w-full items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:text-slate-400"
+                      disabled={Boolean(busyImageId)}
+                      onClick={() => handleDeleteImage(image.publicId)}
+                      type="button"
+                    >
+                      {busyImageId === image.publicId ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}
+                      מחיקת תמונה
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           <label className="block">
-            <span className="text-sm font-semibold text-slate-700">תמונות עד 3</span>
+            <span className="text-sm font-semibold text-slate-700">
+              {isEdit ? `הוספת תמונות (${existingItem?.images?.length || 0}/3 קיימות)` : "תמונות עד 3"}
+            </span>
             <input
               accept="image/png,image/jpeg,image/webp"
               className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3"
+              disabled={isEdit && (existingItem?.images?.length || 0) >= 3}
               multiple
               onChange={updateFiles}
               type="file"

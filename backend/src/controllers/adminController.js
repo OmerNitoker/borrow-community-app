@@ -31,6 +31,8 @@ export const getCommunityOverview = asyncHandler(async (req, res) => {
       category: item.category,
       isActive: item.isActive,
       hiddenByAdmin: item.hiddenByAdmin,
+      hiddenReason: item.hiddenReason,
+      isDemoItem: item.isDemoItem,
       owner: {
         id: item.owner._id.toString(),
         name: item.owner.name

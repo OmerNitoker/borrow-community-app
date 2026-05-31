@@ -25,6 +25,12 @@ export function addItemImages(itemId, formData) {
   });
 }
 
+export function deleteItemImage(itemId, publicId) {
+  return apiRequest(`/items/${itemId}/images/${encodeURIComponent(publicId)}`, {
+    method: "DELETE"
+  });
+}
+
 export function hideItem(itemId) {
   return apiRequest(`/items/${itemId}`, {
     method: "DELETE"

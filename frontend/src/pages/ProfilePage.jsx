@@ -117,10 +117,8 @@ function ProfilePage() {
                   )}
                   <div>
                     <p className="font-bold">{item.title}</p>
-                    <p className="text-sm text-slate-600">
-                      {item.category} · {item.isActive ? "פעיל" : "לא פעיל"}
-                      {item.hiddenByAdmin ? " · הוסתר על ידי מנהל" : ""}
-                    </p>
+                    <p className="text-sm text-slate-600">{item.communityName || item.category} · {item.category}</p>
+                    <p className="text-sm font-semibold">{getItemStatusLabel(item)}</p>
                   </div>
                 </div>
 
@@ -155,6 +153,14 @@ function ProfilePage() {
       </section>
     </section>
   );
+}
+
+function getItemStatusLabel(item) {
+  if (item.hiddenByAdmin) {
+    return "הוסתר על ידי מנהל";
+  }
+
+  return item.isActive ? "פעיל" : "לא פעיל";
 }
 
 function ProfileRow({ label, value }) {

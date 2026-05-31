@@ -133,10 +133,10 @@ function AdminDashboardPage() {
                 <div>
                   <p className="font-bold">{item.title}</p>
                   <p className="text-sm text-slate-600">
-                    {item.owner.name} · {item.category} · {item.isActive ? "פעיל" : "לא פעיל"}
+                    {item.owner.name} · {item.category} · <ItemStatus item={item} />
                   </p>
                 </div>
-                {item.isActive ? (
+                {item.isActive && !item.isDemoItem ? (
                   <button
                     className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:text-red-300"
                     disabled={Boolean(busyId)}
@@ -146,6 +146,8 @@ function AdminDashboardPage() {
                     {busyId === item.id ? <Loader2 className="animate-spin" size={16} /> : <EyeOff size={16} />}
                     הסתרה
                   </button>
+                ) : item.isDemoItem ? (
+                  <span className="rounded-full bg-teal-50 px-3 py-1 text-sm font-semibold text-teal-800">דמו מוגן</span>
                 ) : null}
               </div>
             ))
@@ -154,6 +156,18 @@ function AdminDashboardPage() {
       </section>
     </section>
   );
+}
+
+function ItemStatus({ item }) {
+  if (item.hiddenByAdmin) {
+    return <span className="text-red-700">הוסתר על ידי מנהל</span>;
+  }
+
+  if (!item.isActive) {
+    return <span className="text-slate-500">לא פעיל</span>;
+  }
+
+  return <span className="text-teal-700">פעיל</span>;
 }
 
 function Stat({ label, value }) {

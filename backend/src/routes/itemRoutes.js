@@ -17,6 +17,6 @@ router.get("/:itemId", requireAuth, getItem);
 router.patch("/:itemId", requireAuth, updateItem);
 router.delete("/:itemId", requireAuth, hideItem);
 router.post("/:itemId/images", requireAuth, uploadItemImages.array("images", 3), addItemImages);
-router.delete("/:itemId/images/:publicId", requireAuth, deleteItemImage);
+router.delete("/:itemId/images/:publicId(*)", requireAuth, deleteItemImage);
 
 export default router;
