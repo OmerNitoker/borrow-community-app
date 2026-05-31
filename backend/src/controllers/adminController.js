@@ -1,5 +1,6 @@
 import { Item } from "../models/Item.js";
 import { Membership } from "../models/Membership.js";
+import { User } from "../models/User.js";
 import { getCommunityStats } from "../services/communityService.js";
 import { requireCommunityAdmin } from "../services/membershipService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -7,15 +8,21 @@ import { mapMember } from "../utils/mapMember.js";
 
 export const getCommunityOverview = asyncHandler(async (req, res) => {
   await requireCommunityAdmin(req.user._id, req.params.communityId);
+  const itemFilters = await getAdminItemFilters(req.query);
+  const itemQuery = {
+    community: req.params.communityId,
+    ...itemFilters.query
+  };
+  const itemLimit = getItemLimit(req.query.itemLimit);
 
-  const [memberships, totalItemCount, activeItemCount, stats] = await Promise.all([
+  const [memberships, totalItemCount, activeItemCount, stats, filteredItemCount, items] = await Promise.all([
     Membership.find({ community: req.params.communityId }).populate("user").sort({ status: 1, createdAt: -1 }),
     Item.countDocuments({ community: req.params.communityId }),
     Item.countDocuments({ community: req.params.communityId, isActive: true }),
-    getCommunityStats(req.params.communityId)
+    getCommunityStats(req.params.communityId),
+    Item.countDocuments(itemQuery),
+    Item.find(itemQuery).populate("owner", "name").sort({ createdAt: -1 }).limit(itemLimit)
   ]);
-
-  const items = await Item.find({ community: req.params.communityId }).populate("owner", "name").sort({ createdAt: -1 });
 
   res.json({
     stats: {
@@ -39,6 +46,41 @@ export const getCommunityOverview = asyncHandler(async (req, res) => {
         name: item.owner.name
       },
       createdAt: item.createdAt
-    }))
+    })),
+    itemsPagination: {
+      limit: itemLimit,
+      returnedItems: items.length,
+      totalItems: filteredItemCount,
+      hasMore: items.length < filteredItemCount
+    }
   });
 });
+
+async function getAdminItemFilters(query) {
+  const itemSearch = String(query.itemSearch || "").trim();
+  const ownerSearch = String(query.ownerSearch || "").trim();
+  const itemQuery = {};
+
+  if (itemSearch) {
+    itemQuery.title = { $regex: escapeRegex(itemSearch), $options: "i" };
+  }
+
+  if (ownerSearch) {
+    const owners = await User.find({
+      name: { $regex: escapeRegex(ownerSearch), $options: "i" }
+    }).select("_id");
+
+    itemQuery.owner = { $in: owners.map((owner) => owner._id) };
+  }
+
+  return { query: itemQuery };
+}
+
+function getItemLimit(limit) {
+  const parsedLimit = Number.parseInt(limit, 10) || 12;
+  return Math.min(60, Math.max(6, parsedLimit));
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

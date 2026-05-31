@@ -221,6 +221,48 @@ test("community item catalog returns paginated results", async () => {
   });
 });
 
+test("admin overview filters and limits item rows", async () => {
+  const admin = await register("admin-filter");
+  const ownerA = await register("owner-filter-a");
+  const ownerB = await register("owner-filter-b");
+  const { community } = await createCommunity(admin.cookie, { requiredApproval: false });
+
+  await joinCommunity(ownerA.cookie, community.joinCode);
+  await joinCommunity(ownerB.cookie, community.joinCode);
+
+  await createItem(ownerA.cookie, community.id, "Cordless drill");
+  await createItem(ownerA.cookie, community.id, "Camping mat");
+  await createItem(ownerB.cookie, community.id, "Garden blower");
+  await createItem(ownerB.cookie, community.id, "Serving tray");
+  await createItem(ownerA.cookie, community.id, "Socket wrench");
+  await createItem(ownerA.cookie, community.id, "Picnic blanket");
+  await createItem(ownerB.cookie, community.id, "Folding chairs");
+  await createItem(ownerB.cookie, community.id, "Coffee kit");
+
+  const limited = await request("GET", `/admin/community/${community.id}/overview?itemLimit=6`, {
+    cookie: admin.cookie
+  });
+
+  assert.equal(limited.status, 200);
+  assert.equal(limited.body.items.length, 6);
+  assert.equal(limited.body.itemsPagination.totalItems, 8);
+  assert.equal(limited.body.itemsPagination.hasMore, true);
+
+  const byItem = await request("GET", `/admin/community/${community.id}/overview?itemSearch=drill`, {
+    cookie: admin.cookie
+  });
+
+  assert.equal(byItem.body.itemsPagination.totalItems, 1);
+  assert.equal(byItem.body.items[0].title, "Cordless drill");
+
+  const byOwner = await request("GET", `/admin/community/${community.id}/overview?ownerSearch=owner-filter-b`, {
+    cookie: admin.cookie
+  });
+
+  assert.equal(byOwner.body.itemsPagination.totalItems, 4);
+  assert.ok(byOwner.body.items.every((item) => item.owner.name === "owner-filter-b"));
+});
+
 test("the fixed demo user can hide their own demo items for fairness testing", async () => {
   const user = await register("demo-owner");
   const { community } = await createCommunity(user.cookie, { requiredApproval: false });

@@ -1,12 +1,14 @@
-import { Check, EyeOff, Loader2, RotateCcw, X } from "lucide-react";
+import { Check, EyeOff, Loader2, RotateCcw, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getCommunityOverview } from "../api/adminApi.js";
-import { approveMembership, rejectMembership } from "../api/membershipApi.js";
 import { hideItem, updateItem } from "../api/itemApi.js";
+import { approveMembership, rejectMembership } from "../api/membershipApi.js";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { getItemImageUrl } from "../utils/itemImages.js";
+
+const ADMIN_ITEMS_PAGE_SIZE = 12;
 
 function AdminDashboardPage() {
   const { communityId } = useParams();
@@ -14,16 +16,45 @@ function AdminDashboardPage() {
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
+  const [itemFilters, setItemFilters] = useState({ itemSearch: "", ownerSearch: "" });
+  const [debouncedItemFilters, setDebouncedItemFilters] = useState(itemFilters);
+  const [itemLimit, setItemLimit] = useState(ADMIN_ITEMS_PAGE_SIZE);
+  const [isItemsRefreshing, setIsItemsRefreshing] = useState(false);
 
   async function loadOverview() {
     setError("");
-    const data = await getCommunityOverview(communityId);
-    setOverview(data);
+
+    if (overview) {
+      setIsItemsRefreshing(true);
+    }
+
+    try {
+      const data = await getCommunityOverview(communityId, {
+        ...debouncedItemFilters,
+        itemLimit
+      });
+      setOverview(data);
+    } finally {
+      setIsItemsRefreshing(false);
+    }
   }
 
   useEffect(() => {
     loadOverview().catch((err) => setError(err.message));
-  }, [communityId]);
+  }, [communityId, debouncedItemFilters, itemLimit]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedItemFilters(itemFilters);
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [itemFilters]);
+
+  function updateItemFilter(key, value) {
+    setItemFilters((current) => ({ ...current, [key]: value }));
+    setItemLimit(ADMIN_ITEMS_PAGE_SIZE);
+  }
 
   async function updateRequest(action, membershipId) {
     setBusyId(membershipId);
@@ -180,60 +211,54 @@ function AdminDashboardPage() {
           ))}
         </Panel>
         <Panel title="רשימת פריטים">
+          <div className="mb-4 grid gap-3 md:grid-cols-2">
+            <label className="relative block">
+              <Search className="absolute right-3 top-3.5 text-slate-400" size={17} />
+              <input
+                className="w-full rounded-md border border-slate-300 py-3 pl-3 pr-10 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+                onChange={(event) => updateItemFilter("itemSearch", event.target.value)}
+                placeholder="חיפוש לפי שם פריט"
+                value={itemFilters.itemSearch}
+              />
+            </label>
+            <label className="relative block">
+              <Search className="absolute right-3 top-3.5 text-slate-400" size={17} />
+              <input
+                className="w-full rounded-md border border-slate-300 py-3 pl-3 pr-10 text-sm outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+                onChange={(event) => updateItemFilter("ownerSearch", event.target.value)}
+                placeholder="חיפוש לפי שם משתמש"
+                value={itemFilters.ownerSearch}
+              />
+            </label>
+          </div>
+          <div className="mb-2 min-h-5 text-sm text-slate-500">
+            {isItemsRefreshing ? "מעדכן רשימת פריטים..." : `${overview.itemsPagination.totalItems} פריטים נמצאו`}
+          </div>
           {overview.items.length === 0 ? (
-            <p className="py-3 text-slate-600">עדיין אין פריטים בקהילה.</p>
+            <p className="py-3 text-slate-600">לא נמצאו פריטים שמתאימים לחיפוש.</p>
           ) : (
-            overview.items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between gap-3 border-b border-slate-100 py-3">
-                <div className="flex items-center gap-3">
-                  <img alt="" className="h-14 w-14 rounded-md object-cover" src={getItemImageUrl(item)} />
-                  <div>
-                    <p className="font-bold">{item.title}</p>
-                    <p className="text-sm text-slate-600">
-                      {item.owner.name} · {item.category} · <ItemStatus item={item} />
-                    </p>
-                  </div>
-                </div>
-                {item.isActive ? (
-                  <button
-                    className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:text-red-300"
-                    disabled={Boolean(busyId)}
-                    onClick={() =>
-                      setConfirmAction({
-                        type: "hide-item",
-                        id: item.id,
-                        title: "להסתיר את הפריט?",
-                        text: `${item.title} יוסתר מהקטלוג. אם הפריט הוסתר על ידי מנהל, רק מנהל קהילה יוכל להחזיר אותו לפעילות.`,
-                        confirmText: "כן, להסתיר"
-                      })
-                    }
-                    type="button"
-                  >
-                    {busyId === item.id ? <Loader2 className="animate-spin" size={16} /> : <EyeOff size={16} />}
-                    הסתרה
-                  </button>
-                ) : item.hiddenByAdmin ? (
-                  <button
-                    className="inline-flex items-center gap-2 rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-100 disabled:text-slate-400"
-                    disabled={Boolean(busyId)}
-                    onClick={() =>
-                      setConfirmAction({
-                        type: "reactivate-item",
-                        id: item.id,
-                        title: "להחזיר את הפריט לפעילות?",
-                        text: `${item.title} יחזור להופיע בקטלוג הקהילה.`,
-                        confirmText: "כן, להחזיר",
-                        tone: "success"
-                      })
-                    }
-                    type="button"
-                  >
-                    {busyId === item.id ? <Loader2 className="animate-spin" size={16} /> : <RotateCcw size={16} />}
-                    הפעלה
-                  </button>
-                ) : null}
-              </div>
-            ))
+            <>
+              {overview.items.map((item) => (
+                <AdminItemRow
+                  busyId={busyId}
+                  item={item}
+                  key={item.id}
+                  onConfirmAction={setConfirmAction}
+                />
+              ))}
+
+              {overview.itemsPagination.hasMore ? (
+                <button
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
+                  disabled={isItemsRefreshing}
+                  onClick={() => setItemLimit((current) => current + ADMIN_ITEMS_PAGE_SIZE)}
+                  type="button"
+                >
+                  {isItemsRefreshing ? <Loader2 className="animate-spin" size={16} /> : null}
+                  טען עוד פריטים
+                </button>
+              ) : null}
+            </>
           )}
         </Panel>
       </section>
@@ -250,6 +275,60 @@ function AdminDashboardPage() {
         />
       ) : null}
     </section>
+  );
+}
+
+function AdminItemRow({ busyId, item, onConfirmAction }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-slate-100 py-3">
+      <div className="flex items-center gap-3">
+        <img alt="" className="h-14 w-14 rounded-md object-cover" src={getItemImageUrl(item)} />
+        <div>
+          <p className="font-bold">{item.title}</p>
+          <p className="text-sm text-slate-600">
+            {item.owner.name} · {item.category} · <ItemStatus item={item} />
+          </p>
+        </div>
+      </div>
+      {item.isActive ? (
+        <button
+          className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:text-red-300"
+          disabled={Boolean(busyId)}
+          onClick={() =>
+            onConfirmAction({
+              type: "hide-item",
+              id: item.id,
+              title: "להסתיר את הפריט?",
+              text: `${item.title} יוסתר מהקטלוג. אם הפריט הוסתר על ידי מנהל, רק מנהל קהילה יוכל להחזיר אותו לפעילות.`,
+              confirmText: "כן, להסתיר"
+            })
+          }
+          type="button"
+        >
+          {busyId === item.id ? <Loader2 className="animate-spin" size={16} /> : <EyeOff size={16} />}
+          הסתרה
+        </button>
+      ) : item.hiddenByAdmin ? (
+        <button
+          className="inline-flex items-center gap-2 rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-100 disabled:text-slate-400"
+          disabled={Boolean(busyId)}
+          onClick={() =>
+            onConfirmAction({
+              type: "reactivate-item",
+              id: item.id,
+              title: "להחזיר את הפריט לפעילות?",
+              text: `${item.title} יחזור להופיע בקטלוג הקהילה.`,
+              confirmText: "כן, להחזיר",
+              tone: "success"
+            })
+          }
+          type="button"
+        >
+          {busyId === item.id ? <Loader2 className="animate-spin" size={16} /> : <RotateCcw size={16} />}
+          הפעלה
+        </button>
+      ) : null}
+    </div>
   );
 }
 
