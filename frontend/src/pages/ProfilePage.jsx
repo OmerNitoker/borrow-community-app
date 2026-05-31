@@ -9,6 +9,7 @@ function ProfilePage() {
   const { memberships } = useOutletContext();
   const approvedMemberships = memberships.filter((membership) => membership.status === "approved");
   const [items, setItems] = useState([]);
+  const [activeCountsByCommunity, setActiveCountsByCommunity] = useState({});
   const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
@@ -16,6 +17,7 @@ function ProfilePage() {
   async function loadItems() {
     const data = await getMyItems();
     setItems(data.items || []);
+    setActiveCountsByCommunity(data.activeCountsByCommunity || {});
   }
 
   useEffect(() => {
@@ -79,7 +81,9 @@ function ProfilePage() {
                 <div key={membership.id} className="flex items-center justify-between py-3">
                   <div>
                     <p className="font-bold">{membership.community.name}</p>
-                    <p className="text-sm text-slate-600">{membership.role === "admin" ? "מנהל" : "חבר"}</p>
+                    <p className="text-sm text-slate-600">
+                      {membership.role === "admin" ? "מנהל" : "חבר"} · {activeCountsByCommunity[membership.community.id] || 0} פריטים פעילים
+                    </p>
                   </div>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
                     {membership.status === "approved" ? "מאושר" : "ממתין"}

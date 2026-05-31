@@ -48,7 +48,9 @@ function ItemDetailsPage() {
     <section className="mx-auto max-w-6xl px-5 py-10">
       {searchParams.get("created") ? (
         <p className="mb-5 rounded-md bg-teal-50 px-4 py-3 text-sm font-semibold text-teal-800">
-          הפריט נוסף בהצלחה. ההתקדמות לפתיחת פרטי קשר: {data.viewer.activeItemCount}/3
+          {data.viewer.activeItemCount >= 3
+            ? "איזה יופי, יש לך עכשיו גישה לפרטי הקשר בקהילה הזו."
+            : `הפריט נוסף בהצלחה. ההתקדמות לפתיחת פרטי קשר: ${data.viewer.activeItemCount}/3`}
         </p>
       ) : null}
 

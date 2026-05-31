@@ -1,5 +1,6 @@
 import { ITEM_CATEGORIES } from "../constants/categories.js";
 import { ITEM_CONDITIONS } from "../constants/itemConditions.js";
+import { Community } from "../models/Community.js";
 import { Item } from "../models/Item.js";
 import { getContactAccess } from "../services/contactAccessService.js";
 import { deleteCloudinaryImage, uploadImageBuffer } from "../services/cloudinaryService.js";
@@ -62,6 +63,8 @@ export const updateItem = asyncHandler(async (req, res) => {
     throw createHttpError(404, "Item not found.");
   }
 
+  ensureDemoItemCanBeChanged(item);
+
   const isOwner = item.owner.toString() === req.user._id.toString();
 
   if (!isOwner) {
@@ -121,6 +124,7 @@ export const hideItem = asyncHandler(async (req, res) => {
 
 export const addItemImages = asyncHandler(async (req, res) => {
   const item = await getOwnedItem(req.params.itemId, req.user._id);
+  ensureDemoItemCanBeChanged(item);
   const files = req.files || [];
 
   if (item.images.length + files.length > 3) {
@@ -141,6 +145,7 @@ export const addItemImages = asyncHandler(async (req, res) => {
 
 export const deleteItemImage = asyncHandler(async (req, res) => {
   const item = await getOwnedItem(req.params.itemId, req.user._id);
+  ensureDemoItemCanBeChanged(item);
   const image = item.images.find((currentImage) => currentImage.publicId === req.params.publicId);
 
   if (!image) {
@@ -162,7 +167,15 @@ export const getMyItems = asyncHandler(async (req, res) => {
   }
 
   const items = await Item.find(query).sort({ createdAt: -1 });
-  res.json({ items: items.map(mapOwnedItem) });
+  const communities = await Community.find({
+    _id: { $in: [...new Set(items.map((item) => item.community.toString()))] }
+  }).select("name");
+  const communityNamesById = new Map(communities.map((community) => [community._id.toString(), community.name]));
+
+  res.json({
+    items: items.map((item) => mapOwnedItem(item, communityNamesById)),
+    activeCountsByCommunity: getActiveCountsByCommunity(items)
+  });
 });
 
 async function uploadFiles(files) {
@@ -189,6 +202,12 @@ async function getOwnedItem(itemId, userId) {
   }
 
   return item;
+}
+
+function ensureDemoItemCanBeChanged(item) {
+  if (item.isDemoItem) {
+    throw createHttpError(403, "Protected demo items cannot be changed.");
+  }
 }
 
 async function isCommunityAdmin(userId, communityId) {
@@ -250,7 +269,25 @@ function normalizeItemPayload(payload, options = {}) {
   return normalized;
 }
 
-function mapOwnedItem(item) {
+function getActiveCountsByCommunity(items) {
+  return items.reduce((counts, item) => {
+    const communityId = item.community.toString();
+
+    if (!counts[communityId]) {
+      counts[communityId] = 0;
+    }
+
+    if (item.isActive) {
+      counts[communityId] += 1;
+    }
+
+    return counts;
+  }, {});
+}
+
+function mapOwnedItem(item, communityNamesById = new Map()) {
+  const communityId = item.community.toString();
+
   return {
     id: item._id.toString(),
     title: item.title,
@@ -258,7 +295,8 @@ function mapOwnedItem(item) {
     notes: item.notes,
     condition: item.condition,
     category: item.category,
-    community: item.community.toString(),
+    community: communityId,
+    communityName: communityNamesById.get(communityId) || "",
     owner: item.owner.toString(),
     images: item.images,
     imageUrl: item.images[0]?.url || "",
