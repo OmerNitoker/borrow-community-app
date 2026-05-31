@@ -10,25 +10,41 @@ function CommunityPage() {
   const { communityId } = useParams();
   const [data, setData] = useState(null);
   const [itemsData, setItemsData] = useState(null);
+  const [isItemsLoading, setIsItemsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filters, setFilters] = useState({
-    search: "",
     category: "",
     sort: "newest"
   });
 
   useEffect(() => {
     setData(null);
-    setItemsData(null);
     setError("");
 
-    Promise.all([getCommunity(communityId), getCommunityItems(communityId, filters)])
-      .then(([communityData, communityItemsData]) => {
-        setData(communityData);
-        setItemsData(communityItemsData);
-      })
+    getCommunity(communityId)
+      .then(setData)
       .catch((err) => setError(err.message));
-  }, [communityId, filters]);
+  }, [communityId]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setIsItemsLoading(true);
+    setError("");
+
+    getCommunityItems(communityId, { ...filters, search: debouncedSearch })
+      .then(setItemsData)
+      .catch((err) => setError(err.message))
+      .finally(() => setIsItemsLoading(false));
+  }, [communityId, filters, debouncedSearch]);
 
   if (error) {
     return <PageMessage title="אין גישה לקהילה" text={error} />;
@@ -80,9 +96,9 @@ function CommunityPage() {
             <Search className="absolute right-3 top-3.5 text-slate-400" size={18} />
             <input
               className="w-full rounded-md border border-slate-300 py-3 pl-3 pr-10 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
-              onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
+              onChange={(event) => setSearchInput(event.target.value)}
               placeholder="חיפוש לפי שם או תיאור"
-              value={filters.search}
+              value={searchInput}
             />
           </label>
           <label className="relative block">
@@ -113,7 +129,11 @@ function CommunityPage() {
       </section>
 
       <section className="mt-6 grid gap-4 md:grid-cols-3">
-        {itemsData.items.length === 0 ? (
+        {isItemsLoading ? (
+          <div className="rounded-lg border border-slate-200 bg-white p-6 text-slate-600 md:col-span-3">
+            מעדכן תוצאות...
+          </div>
+        ) : itemsData.items.length === 0 ? (
           <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-slate-600 md:col-span-3">
             עדיין אין פריטים פעילים בקהילה.
           </div>
