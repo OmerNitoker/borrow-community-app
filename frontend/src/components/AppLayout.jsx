@@ -19,6 +19,12 @@ function AppLayout() {
       .finally(() => setIsMembershipsLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (communityId) {
+      localStorage.setItem("borrow:lastCommunityId", communityId);
+    }
+  }, [communityId]);
+
   const approvedMemberships = memberships.filter((membership) => membership.status === "approved");
   const currentMembership = approvedMemberships.find((membership) => membership.community.id === communityId);
 

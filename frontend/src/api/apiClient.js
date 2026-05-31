@@ -27,8 +27,24 @@ export async function apiRequest(path, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || "הבקשה נכשלה. נסה שוב.");
+    throw new Error(getFriendlyErrorMessage(data.message));
   }
 
   return data;
+}
+
+function getFriendlyErrorMessage(message) {
+  if (!message) {
+    return "הבקשה נכשלה. נסה שוב.";
+  }
+
+  if (message.includes("Protected demo items")) {
+    return "זהו פריט דמו מוגן. אפשר ליצור פריטים חדשים בדמו, אבל אי אפשר לשנות את הפריטים המוכנים.";
+  }
+
+  if (message.includes("Items hidden by an admin cannot be reactivated")) {
+    return "פריט שהוסתר על ידי מנהל קהילה לא ניתן להפעלה מחדש.";
+  }
+
+  return message;
 }

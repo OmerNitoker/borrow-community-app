@@ -1,4 +1,4 @@
-import { ArrowLeft, Boxes, Loader2, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, Boxes, Image, Loader2, ShieldCheck, Users } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -24,7 +24,7 @@ const highlights = [
 function AuthPage() {
   return (
     <main className="min-h-screen bg-stone-50 text-slate-950">
-      <section className="mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-5 py-10 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-5 py-10 lg:grid-cols-[1.05fr_0.95fr]">
         <div>
           <p className="text-sm font-semibold text-teal-700">Borrow</p>
           <h1 className="mt-4 text-4xl font-bold leading-tight sm:text-6xl">
@@ -34,6 +34,20 @@ function AuthPage() {
             אפליקציה קהילתית שבה חברים מעלים פריטים להשאלה, מצטרפים לקהילות סגורות,
             ומקבלים פרטי קשר רק אחרי שהם עומדים בכללי האמון.
           </p>
+
+          <div className="mt-8 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <img
+              alt=""
+              className="h-56 w-full object-cover"
+              src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=80"
+            />
+            <div className="flex items-center gap-3 p-4">
+              <Image className="text-teal-700" size={22} />
+              <p className="text-sm leading-6 text-slate-700">
+                דמו מוכן מציג קהילה פעילה, פריטים ותהליך הרשאות מלא לפרטי קשר.
+              </p>
+            </div>
+          </div>
 
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {highlights.map((item) => {

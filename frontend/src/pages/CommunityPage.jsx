@@ -62,11 +62,7 @@ function CommunityPage() {
           {isAdmin ? (
             <p className="mt-2 leading-7">יש לך גישת מנהל מלאה לפרטי הקשר בקהילה זו.</p>
           ) : (
-            <p className="mt-2 leading-7">
-              {accessStatus.canViewContact
-                ? "יש לך גישה מלאה לפרטי הקשר בקהילה זו."
-                : `הוספת 3 פריטים פעילים בקהילה תפתח לך גישה לפרטי הקשר. כרגע: ${accessStatus.activeItemCount}/3`}
-            </p>
+            <AccessProgress accessStatus={accessStatus} />
           )}
           <Link
             className="mt-5 inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
@@ -141,6 +137,7 @@ function Stat({ label, value }) {
 function ItemCard({ communityId, item }) {
   const isLocked = !item.viewer.isOwner && !item.viewer.canViewContact;
   const Icon = isLocked ? Lock : Unlock;
+  const accessLabel = item.viewer.isOwner ? "הפריט שלך" : isLocked ? "פרטי קשר נעולים" : "פרטי קשר פתוחים";
 
   return (
     <Link className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" to={`/communities/${communityId}/items/${item.id}`}>
@@ -154,8 +151,30 @@ function ItemCard({ communityId, item }) {
           <Icon className={isLocked ? "text-slate-400" : "text-teal-700"} size={20} />
         </div>
         {item.description ? <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{item.description}</p> : null}
+        <span className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-bold ${isLocked ? "bg-slate-100 text-slate-600" : "bg-teal-50 text-teal-800"}`}>
+          {accessLabel}
+        </span>
       </div>
     </Link>
+  );
+}
+
+function AccessProgress({ accessStatus }) {
+  if (accessStatus.canViewContact) {
+    return <p className="mt-2 leading-7">יש לך גישה מלאה לפרטי הקשר בקהילה זו.</p>;
+  }
+
+  const progress = Math.min(100, (accessStatus.activeItemCount / accessStatus.requiredActiveItemCount) * 100);
+
+  return (
+    <div className="mt-3">
+      <p className="leading-7">
+        הוספת 3 פריטים פעילים בקהילה תפתח לך גישה לפרטי הקשר. כרגע: {accessStatus.activeItemCount}/3
+      </p>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+        <div className="h-full rounded-full bg-teal-700" style={{ width: `${progress}%` }} />
+      </div>
+    </div>
   );
 }
 

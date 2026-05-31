@@ -185,6 +185,11 @@ function ItemFormPage({ mode }) {
             <span className="mt-2 block text-sm text-slate-500">
               לא חובה להעלות תמונה. אם אין תמונה, תופיע תצוגת ברירת מחדל לפי הקטגוריה בהמשך.
             </span>
+            {files.length > 0 ? (
+              <span className="mt-2 block rounded-md bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-800">
+                נבחרו {files.length} תמונות להעלאה
+              </span>
+            ) : null}
           </label>
 
           <label className="flex items-center gap-3 rounded-md bg-slate-50 p-3 text-sm font-semibold">

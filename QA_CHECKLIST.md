@@ -7,6 +7,7 @@ Use this checklist before sharing the app with a recruiter or tester.
 - MongoDB is running locally.
 - Backend env values exist in `backend/.env`.
 - Cloudinary upload works with a small image.
+- Backend business-rule tests pass with `npm run test:backend`.
 - Backend is running with `npm run dev:backend`.
 - Frontend is running with `npm run dev:frontend`.
 - App opens at `http://localhost:5173`.

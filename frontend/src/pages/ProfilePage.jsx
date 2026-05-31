@@ -1,4 +1,4 @@
-import { Edit, EyeOff, Loader2, Plus, RotateCcw } from "lucide-react";
+import { Edit, EyeOff, Loader2, Plus, RotateCcw, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { getMyItems, hideItem, updateItem } from "../api/itemApi.js";
@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { getItemImageUrl } from "../utils/itemImages.js";
 
 function ProfilePage() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const { memberships } = useOutletContext();
   const approvedMemberships = memberships.filter((membership) => membership.status === "approved");
   const [items, setItems] = useState([]);
@@ -14,6 +14,12 @@ function ProfilePage() {
   const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
+  const [profileForm, setProfileForm] = useState({
+    name: user.name,
+    phone: user.phone
+  });
+  const [profileMessage, setProfileMessage] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   async function loadItems() {
     const data = await getMyItems();
@@ -46,6 +52,22 @@ function ProfilePage() {
     }
   }
 
+  async function handleProfileSubmit(event) {
+    event.preventDefault();
+    setError("");
+    setProfileMessage("");
+    setIsSavingProfile(true);
+
+    try {
+      await updateProfile(profileForm);
+      setProfileMessage("הפרטים נשמרו בהצלחה.");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  }
+
   return (
     <section className="mx-auto max-w-6xl px-5 py-10">
       <p className="text-sm font-semibold text-teal-700">פרופיל אישי</p>
@@ -54,10 +76,36 @@ function ProfilePage() {
       <div className="mt-6 grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-xl font-bold">פרטי משתמש</h2>
-          <dl className="mt-4 space-y-3 text-sm">
+          <form className="mt-4 space-y-4" onSubmit={handleProfileSubmit}>
+            <label className="block">
+              <span className="text-sm font-semibold text-slate-700">שם מלא</span>
+              <input
+                className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+                onChange={(event) => setProfileForm((current) => ({ ...current, name: event.target.value }))}
+                required
+                value={profileForm.name}
+              />
+            </label>
             <ProfileRow label="אימייל" value={user.email} />
-            <ProfileRow label="טלפון" value={user.phone} />
-          </dl>
+            <label className="block">
+              <span className="text-sm font-semibold text-slate-700">טלפון</span>
+              <input
+                className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+                onChange={(event) => setProfileForm((current) => ({ ...current, phone: event.target.value }))}
+                required
+                value={profileForm.phone}
+              />
+            </label>
+            {profileMessage ? <p className="rounded-md bg-teal-50 px-3 py-2 text-sm text-teal-800">{profileMessage}</p> : null}
+            <button
+              className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:bg-slate-400"
+              disabled={isSavingProfile}
+              type="submit"
+            >
+              {isSavingProfile ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+              שמירת פרטים
+            </button>
+          </form>
         </section>
 
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">

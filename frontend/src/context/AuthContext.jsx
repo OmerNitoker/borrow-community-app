@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { getCurrentUser, loginUser, logoutUser, registerUser } from "../api/authApi.js";
+import { getCurrentUser, loginUser, logoutUser, registerUser, updateCurrentUser } from "../api/authApi.js";
 import { enterDemo } from "../api/demoApi.js";
 
 const AuthContext = createContext(null);
@@ -41,8 +41,14 @@ export function AuthProvider({ children }) {
     setDemoCommunity(null);
   }
 
+  async function updateProfile(payload) {
+    const data = await updateCurrentUser(payload);
+    setUser(data.user);
+    return data;
+  }
+
   const value = useMemo(
-    () => ({ user, demoCommunity, isLoading, login, register, startDemo, logout }),
+    () => ({ user, demoCommunity, isLoading, login, register, startDemo, logout, updateProfile }),
     [user, demoCommunity, isLoading]
   );
 

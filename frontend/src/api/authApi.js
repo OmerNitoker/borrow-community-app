@@ -23,3 +23,10 @@ export function logoutUser() {
 export function getCurrentUser() {
   return apiRequest("/auth/me");
 }
+
+export function updateCurrentUser(payload) {
+  return apiRequest("/users/me", {
+    method: "PATCH",
+    body: JSON.stringify(payload)
+  });
+}

@@ -115,6 +115,7 @@ Optional root `.env` can also hold local shared values during development.
 npm run dev
 npm run dev:backend
 npm run dev:frontend
+npm run test:backend
 npm run reset:demo
 ```
 

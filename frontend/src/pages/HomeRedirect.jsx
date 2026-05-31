@@ -9,7 +9,10 @@ function HomeRedirect() {
   useEffect(() => {
     getMyCommunities().then((data) => {
       const memberships = data.memberships || [];
-      const approved = memberships.find((membership) => membership.status === "approved");
+      const approvedMemberships = memberships.filter((membership) => membership.status === "approved");
+      const lastCommunityId = localStorage.getItem("borrow:lastCommunityId");
+      const approved =
+        approvedMemberships.find((membership) => membership.community.id === lastCommunityId) || approvedMemberships[0];
       const pending = memberships.find((membership) => membership.status === "pending");
 
       if (approved) {
