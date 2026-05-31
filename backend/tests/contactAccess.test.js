@@ -142,6 +142,27 @@ test("community admins can reactivate items hidden by community admins", async (
   assert.equal(reactivated.body.item.hiddenByAdmin, false);
 });
 
+test("community admins can reactivate their own items hidden from the admin dashboard", async () => {
+  const admin = await register("admin");
+  const { community } = await createCommunity(admin.cookie, { requiredApproval: false });
+  const { item } = await createItem(admin.cookie, community.id, "Admin item");
+
+  const hidden = await request("DELETE", `/items/${item.id}?asAdmin=true`, { cookie: admin.cookie });
+
+  assert.equal(hidden.status, 200);
+  assert.equal(hidden.body.item.isActive, false);
+  assert.equal(hidden.body.item.hiddenByAdmin, true);
+
+  const reactivated = await request("PATCH", `/items/${item.id}`, {
+    cookie: admin.cookie,
+    body: { isActive: true }
+  });
+
+  assert.equal(reactivated.status, 200);
+  assert.equal(reactivated.body.item.isActive, true);
+  assert.equal(reactivated.body.item.hiddenByAdmin, false);
+});
+
 test("community admins cannot reactivate items hidden by the owner", async () => {
   const admin = await register("admin");
   const owner = await register("owner");

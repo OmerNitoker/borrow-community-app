@@ -47,7 +47,7 @@ function AdminDashboardPage() {
     setBusyId(itemId);
 
     try {
-      await hideItem(itemId);
+      await hideItem(itemId, { asAdmin: true });
       await loadOverview();
     } catch (err) {
       setError(err.message);
