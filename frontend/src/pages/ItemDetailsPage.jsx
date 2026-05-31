@@ -1,4 +1,4 @@
-import { Edit, EyeOff, Loader2, Phone, Trash2 } from "lucide-react";
+import { ArrowRight, Edit, EyeOff, Loader2, Phone, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getItem, hideItem } from "../api/itemApi.js";
@@ -47,6 +47,14 @@ function ItemDetailsPage() {
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-10">
+      <Link
+        className="mb-5 inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100"
+        to={`/communities/${communityId}`}
+      >
+        <ArrowRight size={17} />
+        חזרה לקהילה
+      </Link>
+
       {searchParams.get("created") ? (
         <p className="mb-5 rounded-md bg-teal-50 px-4 py-3 text-sm font-semibold text-teal-800">
           {data.viewer.activeItemCount >= 3
