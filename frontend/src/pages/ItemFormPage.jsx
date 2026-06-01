@@ -238,7 +238,7 @@ function ItemFormPage({ mode }) {
             <span className="text-sm font-semibold text-slate-700">
               {isEdit
                 ? `הוספת תמונות (${(existingItem?.images?.length || 0) + files.length}/3 נבחרו או קיימות)`
-                : `תמונות עד 3 (${files.length}/3 נבחרו)`}
+                : `תמונות (${files.length}/3 נבחרו)`}
             </span>
             <input
               accept="image/png,image/jpeg,image/webp"
