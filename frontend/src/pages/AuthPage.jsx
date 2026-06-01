@@ -21,14 +21,14 @@ const demoOptions = [
   {
     mode: "member",
     title: "כניסה כחבר רגיל",
-    text: "מתחילים עם 2 פריטים פעילים ורואים איך פרטי הקשר נפתחים אחרי הוספת פריט נוסף.",
+    text: "התנסות בממשק המשתמש, צפייה בפרטי הדמו, הוספת פריט.",
     icon: UserRound,
     tone: "light"
   },
   {
     mode: "admin",
     title: "כניסה כמנהל קהילה",
-    text: "בודקים בקשות הצטרפות, קוד קהילה וכלי ניהול פריטים.",
+    text: "התנסות בניהול פריטי ומשתמשי הקהילה.",
     icon: ShieldCheck,
     tone: "primary"
   }
@@ -67,14 +67,17 @@ function AuthPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f3ec] text-slate-950">
-      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-8">
+      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-5 sm:py-6">
         <header className="flex items-center justify-between">
-          <div>
-            <p className="text-2xl font-bold leading-none">השכן</p>
-            <p className="mt-1 text-sm font-semibold text-teal-700">השאלת ציוד בקהילות פרטיות</p>
+          <div className="inline-flex items-center gap-3">
+            <img alt="" className="h-12 w-12 object-contain" src={logoUrl} />
+            <div>
+              <p className="text-2xl font-bold leading-none">השכן</p>
+              <p className="mt-1 text-sm font-semibold text-teal-700">השאלת ציוד בקהילות פרטיות</p>
+            </div>
           </div>
           <button
-            className="hidden items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 sm:inline-flex"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 sm:px-4"
             onClick={() => setIsHowItWorksOpen(true)}
             type="button"
           >
@@ -83,28 +86,17 @@ function AuthPage() {
           </button>
         </header>
 
-        <div className="flex flex-1 flex-col items-center justify-center py-8">
+        <div className="flex flex-1 flex-col items-center justify-center py-5 sm:py-6">
           <section className="mx-auto max-w-3xl text-center">
-            <img alt="" className="mx-auto h-40 w-40 object-contain sm:h-48 sm:w-48" src={logoUrl} />
-            <p className="mt-5 text-sm font-bold text-teal-700">השכן</p>
-            <h1 className="mt-3 text-4xl font-bold leading-tight sm:text-6xl">
-              משתפים ציוד עם אנשים שסומכים עליהם.
+            <h1 className="text-4xl font-bold leading-tight sm:text-5xl">
+              השאלת פריטים בתוך הקהילה
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-700">
-              אפליקציה לקהילות פרטיות שבה אפשר ליצור קהילה, להעלות פריטים להשאלה,
-              ולפתוח פרטי קשר רק אחרי תרומה אמיתית לקהילה.
+            <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-slate-700 sm:text-lg">
+              יוצרים קהילה פרטית, מעלים פריטים להשאלה, ופותחים פרטי קשר לפי כללי הוגנות פשוטים.
             </p>
-            <button
-              className="mt-5 inline-flex items-center gap-2 rounded-md border border-teal-200 bg-white px-4 py-2 text-sm font-bold text-teal-800 shadow-sm hover:bg-teal-50 sm:hidden"
-              onClick={() => setIsHowItWorksOpen(true)}
-              type="button"
-            >
-              <HelpCircle size={17} />
-              איך זה עובד?
-            </button>
           </section>
 
-          <section className="mt-8 grid w-full max-w-5xl gap-5 lg:grid-cols-2">
+          <section className="mt-6 grid w-full max-w-5xl gap-5 lg:grid-cols-2">
             <AuthPanel />
             <DemoPanel />
           </section>
@@ -157,7 +149,7 @@ function AuthPanel() {
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div>
         <p className="text-sm font-bold text-teal-700">חשבון אישי</p>
         <h2 className="mt-2 text-2xl font-bold">כניסה או הרשמה</h2>
@@ -234,9 +226,9 @@ function DemoPanel() {
   }
 
   return (
-    <section className="rounded-xl border border-teal-100 bg-teal-50 p-5 shadow-sm sm:p-7">
+    <section className="rounded-xl border border-teal-100 bg-teal-50 p-5 shadow-sm sm:p-6">
       <div>
-        <p className="text-sm font-bold text-teal-700">דמו למגייסים ולבדיקה</p>
+        <p className="text-sm font-bold text-teal-700">רוצים לראות איך זה עובד?</p>
         <h2 className="mt-2 text-2xl font-bold">כניסה לקהילת דמו</h2>
         <p className="mt-2 leading-7 text-slate-600">
           קהילה מוכנה עם משתמשים, פריטים, בקשות הצטרפות ומנגנון הרשאות מלא.
