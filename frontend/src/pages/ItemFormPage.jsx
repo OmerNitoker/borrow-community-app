@@ -1,4 +1,4 @@
-import { ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
+import { ImagePlus, Loader2, Save, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { addItemImages, createItem, deleteItemImage, getItem, updateItem } from "../api/itemApi.js";
@@ -22,6 +22,8 @@ function ItemFormPage({ mode }) {
   const [form, setForm] = useState(emptyForm);
   const [existingItem, setExistingItem] = useState(null);
   const [files, setFiles] = useState([]);
+  const [filePreviews, setFilePreviews] = useState([]);
+  const [imageSelectionError, setImageSelectionError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(isEdit);
@@ -50,6 +52,20 @@ function ItemFormPage({ mode }) {
       .finally(() => setIsLoading(false));
   }, [isEdit, itemId]);
 
+  useEffect(() => {
+    const previews = files.map((file) => ({
+      key: getFileKey(file),
+      name: file.name,
+      url: URL.createObjectURL(file)
+    }));
+
+    setFilePreviews(previews);
+
+    return () => {
+      previews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    };
+  }, [files]);
+
   function updateField(event) {
     const { name, value, type, checked } = event.target;
     setForm((current) => ({
@@ -59,8 +75,42 @@ function ItemFormPage({ mode }) {
   }
 
   function updateFiles(event) {
-    const maxAvailableSlots = Math.max(0, 3 - (existingItem?.images?.length || 0));
-    setFiles(Array.from(event.target.files || []).slice(0, isEdit ? maxAvailableSlots : 3));
+    const selectedFiles = Array.from(event.target.files || []);
+    const existingImageCount = existingItem?.images?.length || 0;
+    const maxNewFiles = Math.max(0, 3 - existingImageCount);
+    const availableSlots = Math.max(0, maxNewFiles - files.length);
+    const selectedFileKeys = new Set(files.map(getFileKey));
+    const uniqueSelectedFiles = selectedFiles.filter((file) => !selectedFileKeys.has(getFileKey(file)));
+    const acceptedFiles = uniqueSelectedFiles.slice(0, availableSlots);
+    const skippedDuplicates = selectedFiles.length - uniqueSelectedFiles.length;
+    const skippedByLimit = uniqueSelectedFiles.length - acceptedFiles.length;
+
+    event.target.value = "";
+    setImageSelectionError("");
+
+    if (selectedFiles.length === 0) {
+      return;
+    }
+
+    if (availableSlots === 0) {
+      setImageSelectionError("ניתן להעלות עד 3 תמונות לכל פריט.");
+      return;
+    }
+
+    if (acceptedFiles.length > 0) {
+      setFiles((current) => [...current, ...acceptedFiles]);
+    }
+
+    if (skippedByLimit > 0) {
+      setImageSelectionError(`אפשר להוסיף עוד ${availableSlots} תמונות בלבד. הוספנו את ${acceptedFiles.length} התמונות הראשונות.`);
+    } else if (skippedDuplicates > 0) {
+      setImageSelectionError("חלק מהתמונות כבר נבחרו ולכן לא נוספו שוב.");
+    }
+  }
+
+  function removeSelectedFile(fileKey) {
+    setFiles((current) => current.filter((file) => getFileKey(file) !== fileKey));
+    setImageSelectionError("");
   }
 
   async function handleSubmit(event) {
@@ -185,24 +235,52 @@ function ItemFormPage({ mode }) {
 
           <label className="block">
             <span className="text-sm font-semibold text-slate-700">
-              {isEdit ? `הוספת תמונות (${existingItem?.images?.length || 0}/3 קיימות)` : "תמונות עד 3"}
+              {isEdit
+                ? `הוספת תמונות (${(existingItem?.images?.length || 0) + files.length}/3 נבחרו או קיימות)`
+                : `תמונות עד 3 (${files.length}/3 נבחרו)`}
             </span>
             <input
               accept="image/png,image/jpeg,image/webp"
               className="mt-2 w-full rounded-md border border-slate-300 px-3 py-3"
-              disabled={isEdit && (existingItem?.images?.length || 0) >= 3}
+              disabled={(existingItem?.images?.length || 0) + files.length >= 3}
               multiple
               onChange={updateFiles}
               type="file"
             />
+            <span className="mt-2 block text-sm font-semibold text-slate-700">
+              נבחרו או קיימות {(existingItem?.images?.length || 0) + files.length}/3 תמונות
+            </span>
+            {imageSelectionError ? (
+              <span className="mt-2 block rounded-md bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
+                {imageSelectionError}
+              </span>
+            ) : null}
+            {files.length > 0 ? (
+              <div className="mt-3 rounded-md bg-teal-50 p-3">
+                <p className="text-sm font-semibold text-teal-800">נבחרו {files.length} תמונות להעלאה</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  {filePreviews.map((preview) => (
+                    <div className="overflow-hidden rounded-md border border-teal-100 bg-white" key={preview.key}>
+                      <img alt="" className="h-24 w-full object-cover" src={preview.url} />
+                      <div className="flex items-center justify-between gap-2 px-2 py-2">
+                        <span className="truncate text-xs text-slate-600">{preview.name}</span>
+                        <button
+                          aria-label="הסרת תמונה"
+                          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-red-700 hover:bg-red-50"
+                          onClick={() => removeSelectedFile(preview.key)}
+                          type="button"
+                        >
+                          <X size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <span className="mt-2 block text-sm text-slate-500">
               לא חובה להעלות תמונה. אם אין תמונה, תופיע תצוגת ברירת מחדל לפי הקטגוריה בהמשך.
             </span>
-            {files.length > 0 ? (
-              <span className="mt-2 block rounded-md bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-800">
-                נבחרו {files.length} תמונות להעלאה
-              </span>
-            ) : null}
           </label>
 
           <label className="flex items-center gap-3 rounded-md bg-slate-50 p-3 text-sm font-semibold">
@@ -263,6 +341,10 @@ function createImageFormData(files) {
   const formData = new FormData();
   files.forEach((file) => formData.append("images", file));
   return formData;
+}
+
+function getFileKey(file) {
+  return `${file.name}-${file.size}-${file.lastModified}`;
 }
 
 function TextInput({ label, name, value, onChange }) {
