@@ -5,6 +5,7 @@ import { addItemImages, createItem, deleteItemImage, getItem, updateItem } from 
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { itemCategories, itemConditions } from "../constants/itemOptions.js";
+import { selectedImagesForUploadText } from "../utils/hebrewText.js";
 
 const emptyForm = {
   title: "",
@@ -257,7 +258,7 @@ function ItemFormPage({ mode }) {
             ) : null}
             {files.length > 0 ? (
               <div className="mt-3 rounded-md bg-teal-50 p-3">
-                <p className="text-sm font-semibold text-teal-800">נבחרו {files.length} תמונות להעלאה</p>
+                <p className="text-sm font-semibold text-teal-800">{selectedImagesForUploadText(files.length)}</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-3">
                   {filePreviews.map((preview) => (
                     <div className="overflow-hidden rounded-md border border-teal-100 bg-white" key={preview.key}>

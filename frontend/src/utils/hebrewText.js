@@ -13,3 +13,7 @@ export function foundItemsText(count) {
 export function missingFairnessItemsText(count) {
   return count === 1 ? "חסר לך רק פריט אחד." : `חסרים לך עוד ${count} פריטים.`;
 }
+
+export function selectedImagesForUploadText(count) {
+  return count === 1 ? "נבחרה תמונה אחת להעלאה" : `נבחרו ${count} תמונות להעלאה`;
+}
