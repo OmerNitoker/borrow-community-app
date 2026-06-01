@@ -15,6 +15,7 @@ function ItemDetailsPage() {
   const [error, setError] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   async function loadItem() {
     const itemData = await getItem(itemId);
@@ -22,6 +23,7 @@ function ItemDetailsPage() {
   }
 
   useEffect(() => {
+    setSelectedImageIndex(0);
     loadItem().catch((err) => setError(err.message));
   }, [itemId]);
 
@@ -76,7 +78,10 @@ function ItemDetailsPage() {
     return <LoadingScreen />;
   }
 
-  const image = getItemImageUrl(data.item);
+  const galleryImages = data.item.images?.length
+    ? data.item.images.map((currentImage) => currentImage.url).filter(Boolean)
+    : [getItemImageUrl(data.item)];
+  const image = galleryImages[selectedImageIndex] || galleryImages[0];
   const missingCount = Math.max(0, data.viewer.requiredActiveItemCount - data.viewer.activeItemCount);
   const canAdminReactivate = data.viewer.isCommunityAdmin && !data.item.isActive && data.item.hiddenByAdmin;
   const canShowAdminActions = data.viewer.isCommunityAdmin && (!data.viewer.isOwner || canAdminReactivate);
@@ -102,10 +107,22 @@ function ItemDetailsPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <img alt="" className="h-96 w-full object-cover" src={image} />
-          {data.item.images.length > 1 ? (
+          {galleryImages.length > 1 ? (
             <div className="grid grid-cols-3 gap-2 p-3">
-              {data.item.images.map((currentImage) => (
-                <img alt="" className="h-24 rounded-md object-cover" key={currentImage.url} src={currentImage.url} />
+              {galleryImages.map((currentImage, index) => (
+                <button
+                  aria-label={`הצגת תמונה ${index + 1}`}
+                  className={`rounded-md border-2 p-0.5 transition ${
+                    selectedImageIndex === index
+                      ? "border-teal-700"
+                      : "border-transparent hover:border-teal-200"
+                  }`}
+                  key={currentImage}
+                  onClick={() => setSelectedImageIndex(index)}
+                  type="button"
+                >
+                  <img alt="" className="h-24 w-full rounded object-cover" src={currentImage} />
+                </button>
               ))}
             </div>
           ) : null}
