@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { getCommunity, getCommunityItems } from "../api/communityApi.js";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { itemCategories } from "../constants/itemOptions.js";
+import { itemCountText } from "../utils/hebrewText.js";
 import { getItemImageUrl } from "../utils/itemImages.js";
 
 const ITEMS_PER_PAGE = 12;
@@ -221,7 +222,7 @@ function Pagination({ pagination, isLoading, onPageChange }) {
   return (
     <nav className="mt-6 flex flex-col items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row">
       <p className="text-sm font-semibold text-slate-700">
-        עמוד {pagination.page} מתוך {pagination.totalPages} · {pagination.totalItems} פריטים
+        עמוד {pagination.page} מתוך {pagination.totalPages} · {itemCountText(pagination.totalItems)}
       </p>
       <div className="flex items-center gap-2">
         <button

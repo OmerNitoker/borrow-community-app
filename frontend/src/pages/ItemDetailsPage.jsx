@@ -5,6 +5,7 @@ import { getItem, hideItem, updateItem } from "../api/itemApi.js";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { getConditionLabel } from "../constants/itemOptions.js";
+import { missingFairnessItemsText } from "../utils/hebrewText.js";
 import { getItemImageUrl } from "../utils/itemImages.js";
 
 function ItemDetailsPage() {
@@ -292,7 +293,7 @@ function ContactPanel({ data, missingCount, communityId }) {
         <p>טלפון: 050-000-0000</p>
       </div>
       <p className="mt-4 leading-7 text-slate-700">
-        כדי לשמור על קהילה פעילה והוגנת, פרטי הקשר נפתחים אחרי הוספת 3 פריטים פעילים. חסרים לך עוד {missingCount} פריטים.
+        כדי לשמור על קהילה פעילה והוגנת, פרטי הקשר נפתחים אחרי הוספת 3 פריטים פעילים. {missingFairnessItemsText(missingCount)}
       </p>
       <Link
         className="mt-4 inline-flex rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"

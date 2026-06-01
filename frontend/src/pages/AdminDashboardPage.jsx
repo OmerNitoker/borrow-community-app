@@ -7,6 +7,7 @@ import { approveMembership, rejectMembership } from "../api/membershipApi.js";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import JoinCodeDisplay from "../components/JoinCodeDisplay.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
+import { foundItemsText } from "../utils/hebrewText.js";
 import { getItemImageUrl } from "../utils/itemImages.js";
 
 const ADMIN_ITEMS_PAGE_SIZE = 12;
@@ -259,7 +260,7 @@ function AdminDashboardPage() {
             </label>
           </div>
           <div className="mb-2 min-h-5 text-sm text-slate-500">
-            {isItemsRefreshing ? "מעדכן רשימת פריטים..." : `${overview.itemsPagination.totalItems} פריטים נמצאו`}
+            {isItemsRefreshing ? "מעדכן רשימת פריטים..." : foundItemsText(overview.itemsPagination.totalItems)}
           </div>
           {overview.items.length === 0 ? (
             <p className="py-3 text-slate-600">לא נמצאו פריטים שמתאימים לחיפוש.</p>

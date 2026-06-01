@@ -4,6 +4,7 @@ import { Link, useOutletContext } from "react-router-dom";
 import { getMyItems, hideItem, updateItem } from "../api/itemApi.js";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { activeItemCountText } from "../utils/hebrewText.js";
 import { getItemImageUrl } from "../utils/itemImages.js";
 
 function ProfilePage() {
@@ -142,7 +143,7 @@ function ProfilePage() {
                   <div>
                     <p className="font-bold">{membership.community.name}</p>
                     <p className="text-sm text-slate-600">
-                      {membership.role === "admin" ? "מנהל" : "חבר"} · {activeCountsByCommunity[membership.community.id] || 0} פריטים פעילים
+                      {membership.role === "admin" ? "מנהל" : "חבר"} · {activeItemCountText(activeCountsByCommunity[membership.community.id] || 0)}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
