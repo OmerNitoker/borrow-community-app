@@ -55,15 +55,15 @@ function PendingApprovalPage() {
 
   if (!membership) {
     return (
-      <section className="mx-auto max-w-3xl px-5 py-10">
-        <p className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">לא נמצאה בקשת הצטרפות לקהילה הזו.</p>
+      <section className="mx-auto max-w-3xl px-4 py-6 sm:px-5 sm:py-10">
+        <p className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">לא נמצאה בקשת הצטרפות לקהילה הזו.</p>
       </section>
     );
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-5 py-10">
-      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="mx-auto max-w-3xl px-4 py-6 sm:px-5 sm:py-10">
+      <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <Clock className="text-teal-700" size={32} />
         <h1 className="mt-4 text-3xl font-bold">הבקשה נשלחה</h1>
         <p className="mt-3 leading-8 text-slate-700">
@@ -75,9 +75,9 @@ function PendingApprovalPage() {
 
         {error ? <p className="mt-5 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
 
-        <div className="mt-7 flex flex-wrap gap-3">
+        <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap">
           <button
-            className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:text-red-300"
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:text-red-300"
             disabled={Boolean(isSubmitting)}
             onClick={handleCancel}
             type="button"
@@ -86,7 +86,7 @@ function PendingApprovalPage() {
             ביטול בקשה
           </button>
           <Link
-            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100"
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100"
             to="/onboarding"
           >
             קהילה אחרת

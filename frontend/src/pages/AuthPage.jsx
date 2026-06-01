@@ -67,17 +67,17 @@ function AuthPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f3ec] text-slate-950">
-      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-5 sm:py-6">
-        <header className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-3">
-            <img alt="" className="h-12 w-12 object-contain" src={logoUrl} />
-            <div>
-              <p className="text-2xl font-bold leading-none">השכן</p>
-              <p className="mt-1 text-sm font-semibold text-teal-700">השאלת ציוד בקהילות פרטיות</p>
+      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-4 sm:px-5 sm:py-6">
+        <header className="flex items-center justify-between gap-3">
+          <div className="inline-flex min-w-0 items-center gap-2 sm:gap-3">
+            <img alt="" className="h-10 w-10 shrink-0 object-contain sm:h-12 sm:w-12" src={logoUrl} />
+            <div className="min-w-0">
+              <p className="text-xl font-bold leading-none sm:text-2xl">השכן</p>
+              <p className="mt-1 hidden text-sm font-semibold text-teal-700 sm:block">השאלת ציוד בקהילות פרטיות</p>
             </div>
           </div>
           <button
-            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 sm:px-4"
+            className="inline-flex shrink-0 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 sm:px-4"
             onClick={() => setIsHowItWorksOpen(true)}
             type="button"
           >
@@ -88,10 +88,10 @@ function AuthPage() {
 
         <div className="flex flex-1 flex-col items-center justify-center py-5 sm:py-6">
           <section className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-bold leading-tight sm:text-5xl">
+            <h1 className="text-3xl font-bold leading-tight sm:text-5xl">
               השאלת פריטים בתוך הקהילה
             </h1>
-            <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-slate-700 sm:text-lg">
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-700 sm:text-lg">
               יוצרים קהילה פרטית, מעלים פריטים להשאלה, ופותחים פרטי קשר לפי כללי הוגנות פשוטים.
             </p>
           </section>
@@ -243,7 +243,7 @@ function DemoPanel() {
 
           return (
             <button
-              className={`group flex min-h-20 items-center justify-between gap-3 rounded-md border px-4 py-3 text-right transition focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:opacity-55 ${
+              className={`group flex min-h-20 items-center justify-between gap-3 rounded-md border px-3 py-3 text-right transition focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:opacity-55 sm:px-4 ${
                 isPrimary
                   ? "border-teal-700 bg-teal-700 text-white shadow-sm hover:bg-teal-800"
                   : "border-slate-200 bg-white text-slate-950 hover:border-teal-200"

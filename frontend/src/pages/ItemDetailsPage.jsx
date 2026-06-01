@@ -88,9 +88,9 @@ function ItemDetailsPage() {
   const canShowAdminActions = data.viewer.isCommunityAdmin && (!data.viewer.isOwner || canAdminReactivate);
 
   return (
-    <section className="mx-auto max-w-6xl px-5 py-10">
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-10">
       <Link
-        className="mb-5 inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100"
+        className="mb-5 inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100 sm:w-auto"
         to={`/communities/${communityId}`}
       >
         <ArrowRight size={17} />
@@ -107,7 +107,7 @@ function ItemDetailsPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <img alt="" className="h-96 w-full object-cover" src={image} />
+          <img alt="" className="h-72 w-full object-cover sm:h-96" src={image} />
           {galleryImages.length > 1 ? (
             <div className="grid grid-cols-3 gap-2 p-3">
               {galleryImages.map((currentImage, index) => (
@@ -122,18 +122,18 @@ function ItemDetailsPage() {
                   onClick={() => setSelectedImageIndex(index)}
                   type="button"
                 >
-                  <img alt="" className="h-24 w-full rounded object-cover" src={currentImage} />
+                  <img alt="" className="h-20 w-full rounded object-cover sm:h-24" src={currentImage} />
                 </button>
               ))}
             </div>
           ) : null}
         </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div>
               <p className="text-sm font-semibold text-teal-700">{data.item.category}</p>
-              <h1 className="mt-2 text-4xl font-bold">{data.item.title}</h1>
+              <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{data.item.title}</h1>
               <p className="mt-2 text-sm text-slate-600">מצב: {getConditionLabel(data.item.condition)}</p>
             </div>
             {!data.item.isActive ? <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold">לא פעיל</span> : null}
@@ -185,9 +185,9 @@ function ItemDetailsPage() {
 function OwnerActions({ communityId, data, itemId, onConfirmAction }) {
   if (!data.item.isActive) {
     return (
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap">
         <Link
-          className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
           to={`/communities/${communityId}/items/${itemId}/edit`}
         >
           <Edit size={17} />
@@ -200,16 +200,16 @@ function OwnerActions({ communityId, data, itemId, onConfirmAction }) {
   const hideAsAdmin = data.viewer.isCommunityAdmin;
 
   return (
-    <div className="mt-6 flex flex-wrap gap-3">
+    <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap">
       <Link
-        className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+        className="inline-flex items-center justify-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
         to={`/communities/${communityId}/items/${itemId}/edit`}
       >
         <Edit size={17} />
         עריכה
       </Link>
       <button
-        className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+        className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
         onClick={() =>
           onConfirmAction({
             type: hideAsAdmin ? "admin-hide" : "owner-hide",
@@ -235,7 +235,7 @@ function AdminModerationActions({ item, onConfirmAction }) {
       <p className="text-sm font-bold text-slate-700">פעולות מנהל</p>
       {!item.isActive && item.hiddenByAdmin ? (
         <button
-          className="mt-3 inline-flex items-center gap-2 rounded-md border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-100"
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-100 sm:w-auto"
           onClick={() =>
             onConfirmAction({
               type: "admin-reactivate",
@@ -252,7 +252,7 @@ function AdminModerationActions({ item, onConfirmAction }) {
         </button>
       ) : item.isActive ? (
         <button
-          className="mt-3 inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 sm:w-auto"
           onClick={() =>
             onConfirmAction({
               type: "admin-hide",
@@ -296,7 +296,7 @@ function ContactPanel({ data, missingCount, communityId }) {
         כדי לשמור על קהילה פעילה והוגנת, פרטי הקשר נפתחים אחרי הוספת 3 פריטים פעילים. {missingFairnessItemsText(missingCount)}
       </p>
       <Link
-        className="mt-4 inline-flex rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+        className="mt-4 inline-flex w-full justify-center rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 sm:w-auto"
         to={`/communities/${communityId}/items/new`}
       >
         הוספת פריט
@@ -307,8 +307,8 @@ function ContactPanel({ data, missingCount, communityId }) {
 
 function PageMessage({ title, text }) {
   return (
-    <section className="mx-auto max-w-3xl px-5 py-10">
-      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="mx-auto max-w-3xl px-4 py-6 sm:px-5 sm:py-10">
+      <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <h1 className="text-2xl font-bold">{title}</h1>
         <p className="mt-3 text-slate-700">{text}</p>
       </div>

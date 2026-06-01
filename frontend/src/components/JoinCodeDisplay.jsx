@@ -22,7 +22,7 @@ function JoinCodeDisplay({ joinCode, requiredApproval, className = "" }) {
   return (
     <div className={className}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <code className="inline-flex min-h-14 flex-1 items-center justify-center rounded-md border border-teal-200 bg-white px-5 py-3 text-center text-3xl font-bold tracking-widest text-teal-800 shadow-sm">
+        <code className="inline-flex min-h-14 flex-1 items-center justify-center rounded-md border border-teal-200 bg-white px-4 py-3 text-center text-2xl font-bold tracking-widest text-teal-800 shadow-sm sm:px-5 sm:text-3xl">
           {joinCode}
         </code>
         <button

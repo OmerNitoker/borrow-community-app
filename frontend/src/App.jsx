@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import AppLayout from "./components/AppLayout.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import PublicRoute from "./components/PublicRoute.jsx";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 import AdminDashboardPage from "./pages/AdminDashboardPage.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import CommunityPage from "./pages/CommunityPage.jsx";
@@ -15,32 +16,35 @@ import ProfilePage from "./pages/ProfilePage.jsx";
 
 function App() {
   return (
-    <Routes>
-      <Route
-        path="/auth"
-        element={
-          <PublicRoute>
-            <AuthPage />
-          </PublicRoute>
-        }
-      />
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route
+          path="/auth"
+          element={
+            <PublicRoute>
+              <AuthPage />
+            </PublicRoute>
+          }
+        />
 
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AppLayout />}>
-          <Route index element={<HomeRedirect />} />
-          <Route path="/onboarding" element={<OnboardingPage />} />
-          <Route path="/pending/:communityId" element={<PendingApprovalPage />} />
-          <Route path="/communities/:communityId" element={<CommunityPage />} />
-          <Route path="/communities/:communityId/items/new" element={<ItemFormPage mode="create" />} />
-          <Route path="/communities/:communityId/items/:itemId" element={<ItemDetailsPage />} />
-          <Route path="/communities/:communityId/items/:itemId/edit" element={<ItemFormPage mode="edit" />} />
-          <Route path="/communities/:communityId/admin" element={<AdminDashboardPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route index element={<HomeRedirect />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/pending/:communityId" element={<PendingApprovalPage />} />
+            <Route path="/communities/:communityId" element={<CommunityPage />} />
+            <Route path="/communities/:communityId/items/new" element={<ItemFormPage mode="create" />} />
+            <Route path="/communities/:communityId/items/:itemId" element={<ItemDetailsPage />} />
+            <Route path="/communities/:communityId/items/:itemId/edit" element={<ItemFormPage mode="edit" />} />
+            <Route path="/communities/:communityId/admin" element={<AdminDashboardPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
         </Route>
-      </Route>
 
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </>
   );
 }
 

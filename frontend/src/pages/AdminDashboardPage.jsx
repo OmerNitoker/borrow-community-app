@@ -124,7 +124,7 @@ function AdminDashboardPage() {
 
   if (error) {
     return (
-      <section className="mx-auto max-w-3xl px-5 py-10">
+      <section className="mx-auto max-w-3xl px-4 py-6 sm:px-5 sm:py-10">
         <p className="rounded-lg border border-red-100 bg-red-50 p-6 text-red-700">{error}</p>
       </section>
     );
@@ -135,14 +135,14 @@ function AdminDashboardPage() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-5 py-10">
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-teal-700">ניהול קהילה</p>
-          <h1 className="mt-2 text-4xl font-bold">דשבורד מנהל</h1>
+          <h1 className="mt-2 text-3xl font-bold sm:text-4xl">דשבורד מנהל</h1>
         </div>
         <Link
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100 sm:w-auto"
           to={`/communities/${communityId}`}
         >
           מעבר לדף הקהילה
@@ -151,7 +151,7 @@ function AdminDashboardPage() {
       </div>
 
       {overview.community ? (
-        <section className="mt-6 rounded-lg border border-teal-100 bg-teal-50 p-5 shadow-sm">
+        <section className="mt-6 rounded-lg border border-teal-100 bg-teal-50 p-4 shadow-sm sm:p-5">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold text-teal-700">קוד הצטרפות לקהילה</p>
             <h2 className="mt-1 text-xl font-bold">{overview.community.name}</h2>
@@ -165,14 +165,14 @@ function AdminDashboardPage() {
         </section>
       ) : null}
 
-      <div className="mt-6 grid gap-3 md:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="חברים" value={overview.stats.memberCount} />
         <Stat label="בקשות" value={overview.stats.pendingCount} />
         <Stat label="פריטים פעילים" value={overview.stats.activeItemCount} />
         <Stat label="כל הפריטים" value={overview.stats.totalItemCount} />
       </div>
 
-      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <h2 className="text-xl font-bold">בקשות הצטרפות</h2>
         <div className="mt-4 divide-y divide-slate-100">
           {overview.pendingMembers.length === 0 ? (
@@ -184,9 +184,9 @@ function AdminDashboardPage() {
                   <p className="font-bold">{membership.user.name}</p>
                   <p className="text-sm text-slate-600">{membership.user.email}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="grid gap-2 sm:flex">
                   <button
-                    className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:bg-slate-400"
+                    className="inline-flex items-center justify-center gap-2 rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:bg-slate-400"
                     disabled={Boolean(busyId)}
                     onClick={() =>
                       setConfirmAction({
@@ -205,7 +205,7 @@ function AdminDashboardPage() {
                     אישור
                   </button>
                   <button
-                    className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:text-red-300"
+                    className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:text-red-300"
                     disabled={Boolean(busyId)}
                     onClick={() =>
                       setConfirmAction({
@@ -308,10 +308,10 @@ function AdminDashboardPage() {
 
 function AdminItemRow({ busyId, item, onConfirmAction }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-slate-100 py-3">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-3 border-b border-slate-100 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-center gap-3">
         <img alt="" className="h-14 w-14 rounded-md object-cover" src={getItemImageUrl(item)} />
-        <div>
+        <div className="min-w-0">
           <p className="font-bold">{item.title}</p>
           <p className="text-sm text-slate-600">
             {item.owner.name} · {item.category} · <ItemStatus item={item} />
@@ -320,7 +320,7 @@ function AdminItemRow({ busyId, item, onConfirmAction }) {
       </div>
       {item.isActive ? (
         <button
-          className="inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:text-red-300"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:text-red-300 sm:w-auto"
           disabled={Boolean(busyId)}
           onClick={() =>
             onConfirmAction({
@@ -338,7 +338,7 @@ function AdminItemRow({ busyId, item, onConfirmAction }) {
         </button>
       ) : item.hiddenByAdmin ? (
         <button
-          className="inline-flex items-center gap-2 rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-100 disabled:text-slate-400"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-100 disabled:text-slate-400 sm:w-auto"
           disabled={Boolean(busyId)}
           onClick={() =>
             onConfirmAction({
@@ -374,7 +374,7 @@ function ItemStatus({ item }) {
 
 function Stat({ label, value }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
       <p className="text-2xl font-bold">{value}</p>
       <p className="text-sm text-slate-600">{label}</p>
     </div>
@@ -383,7 +383,7 @@ function Stat({ label, value }) {
 
 function Panel({ title, children }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <h2 className="text-xl font-bold">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>

@@ -74,11 +74,11 @@ function CommunityPage() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-5 py-10">
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-10">
       <div className="grid gap-5 lg:grid-cols-[1.5fr_0.8fr]">
-        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <p className="text-sm font-semibold text-teal-700">קהילה</p>
-          <h1 className="mt-2 text-4xl font-bold">{data.community.name}</h1>
+          <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{data.community.name}</h1>
           {data.community.description ? <p className="mt-3 leading-8 text-slate-700">{data.community.description}</p> : null}
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -88,7 +88,7 @@ function CommunityPage() {
           </div>
         </section>
 
-        <section className="rounded-lg border border-teal-100 bg-teal-50 p-6 text-teal-950 shadow-sm">
+        <section className="rounded-lg border border-teal-100 bg-teal-50 p-5 text-teal-950 shadow-sm sm:p-6">
           <ShieldCheck size={28} />
           <h2 className="mt-4 text-xl font-bold">סטטוס גישה לפרטי קשר</h2>
           {isAdmin ? (
@@ -97,7 +97,7 @@ function CommunityPage() {
             <AccessProgress accessStatus={accessStatus} />
           )}
           <Link
-            className="mt-5 inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 sm:w-auto"
             to={`/communities/${communityId}/items/new`}
           >
             <Plus size={17} />
@@ -106,8 +106,8 @@ function CommunityPage() {
         </section>
       </div>
 
-      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="mb-3 flex min-h-5 items-center justify-between gap-3">
+      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="mb-3 flex min-h-5 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <p className="text-sm font-semibold text-slate-700">חיפוש וסינון</p>
           {isItemsLoading ? <p className="text-sm text-teal-700">מעדכן תוצאות...</p> : null}
         </div>
@@ -148,9 +148,9 @@ function CommunityPage() {
         </div>
       </section>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-3">
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {itemsData.items.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-slate-600 md:col-span-3">
+          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-slate-600 sm:col-span-2 lg:col-span-3">
             עדיין אין פריטים פעילים בקהילה.
           </div>
         ) : (
@@ -181,8 +181,8 @@ function ItemCard({ communityId, item }) {
 
   return (
     <Link className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" to={`/communities/${communityId}/items/${item.id}`}>
-      <img alt="" className="h-40 w-full object-cover" src={getItemImageUrl(item)} />
-      <div className="p-5">
+      <img alt="" className="h-44 w-full object-cover sm:h-40" src={getItemImageUrl(item)} />
+      <div className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-slate-950">{item.title}</h2>
@@ -224,9 +224,9 @@ function Pagination({ pagination, isLoading, onPageChange }) {
       <p className="text-sm font-semibold text-slate-700">
         עמוד {pagination.page} מתוך {pagination.totalPages} · {itemCountText(pagination.totalItems)}
       </p>
-      <div className="flex items-center gap-2">
+      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
         <button
-          className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-45"
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-45"
           disabled={!pagination.hasPreviousPage || isLoading}
           onClick={() => onPageChange(pagination.page - 1)}
           type="button"
@@ -235,7 +235,7 @@ function Pagination({ pagination, isLoading, onPageChange }) {
           הקודם
         </button>
         <button
-          className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
           disabled={!pagination.hasNextPage || isLoading}
           onClick={() => onPageChange(pagination.page + 1)}
           type="button"
@@ -250,8 +250,8 @@ function Pagination({ pagination, isLoading, onPageChange }) {
 
 function PageMessage({ title, text }) {
   return (
-    <section className="mx-auto max-w-3xl px-5 py-10">
-      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="mx-auto max-w-3xl px-4 py-6 sm:px-5 sm:py-10">
+      <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <h1 className="text-2xl font-bold">{title}</h1>
         <p className="mt-3 text-slate-700">{text}</p>
       </div>

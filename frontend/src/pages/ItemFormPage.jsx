@@ -174,10 +174,10 @@ function ItemFormPage({ mode }) {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-5 py-10">
-      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="mx-auto max-w-3xl px-4 py-6 sm:px-5 sm:py-10">
+      <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <ImagePlus className="text-teal-700" size={32} />
-        <h1 className="mt-4 text-3xl font-bold">{isEdit ? "עריכת פריט" : "הוספת פריט"}</h1>
+        <h1 className="mt-4 text-2xl font-bold sm:text-3xl">{isEdit ? "עריכת פריט" : "הוספת פריט"}</h1>
         <p className="mt-3 leading-8 text-slate-700">
           ככל שיהיו יותר תמונות ותיאור ברור יותר, יהיה קל יותר לחברי הקהילה להבין אם הפריט מתאים להם.
         </p>
@@ -215,7 +215,7 @@ function ItemFormPage({ mode }) {
           {isEdit && existingItem?.images?.length > 0 ? (
             <section>
               <p className="text-sm font-semibold text-slate-700">תמונות קיימות</p>
-              <div className="mt-2 grid gap-3 sm:grid-cols-3">
+              <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {existingItem.images.map((image) => (
                   <div className="overflow-hidden rounded-md border border-slate-200 bg-slate-50" key={image.publicId || image.url}>
                     <img alt="" className="h-28 w-full object-cover" src={image.url} />
@@ -259,7 +259,7 @@ function ItemFormPage({ mode }) {
             {files.length > 0 ? (
               <div className="mt-3 rounded-md bg-teal-50 p-3">
                 <p className="text-sm font-semibold text-teal-800">{selectedImagesForUploadText(files.length)}</p>
-                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {filePreviews.map((preview) => (
                     <div className="overflow-hidden rounded-md border border-teal-100 bg-white" key={preview.key}>
                       <img alt="" className="h-24 w-full object-cover" src={preview.url} />
@@ -298,9 +298,9 @@ function ItemFormPage({ mode }) {
           {error ? <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
           {success ? <p className="rounded-md bg-teal-50 px-4 py-3 text-sm text-teal-800">{success}</p> : null}
 
-          <div className="flex flex-wrap gap-3">
+          <div className="grid gap-3 sm:flex sm:flex-wrap">
             <button
-              className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
               disabled={isSubmitting}
               type="submit"
             >
@@ -308,7 +308,7 @@ function ItemFormPage({ mode }) {
               {isEdit ? "שמירת שינויים" : "הוספת פריט"}
             </button>
             <Link
-              className="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold hover:bg-slate-100"
+              className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold hover:bg-slate-100"
               to={isEdit ? `/communities/${communityId}/items/${itemId}` : `/communities/${communityId}`}
             >
               ביטול

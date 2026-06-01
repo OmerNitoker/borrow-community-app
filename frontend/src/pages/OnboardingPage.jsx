@@ -68,10 +68,10 @@ function OnboardingPage() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-5 py-10">
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-10">
       <div className="max-w-3xl">
         <p className="text-sm font-semibold text-teal-700">התחלה</p>
-        <h1 className="mt-2 text-4xl font-bold">ברוך הבא! איך תרצה להתחיל?</h1>
+        <h1 className="mt-2 text-3xl font-bold sm:text-4xl">ברוך הבא! איך תרצה להתחיל?</h1>
         <p className="mt-3 leading-8 text-slate-700">
           אפשר להצטרף לקהילה קיימת, לפתוח קהילה חדשה או להיכנס לדמו מלא כדי לראות את המוצר בפעולה.
         </p>
@@ -79,8 +79,8 @@ function OnboardingPage() {
 
       {error ? <p className="mt-6 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
 
-      <div className="mt-8 grid gap-5 lg:grid-cols-3">
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <Users className="text-teal-700" size={28} />
           <h2 className="mt-4 text-xl font-bold">הצטרפות לקהילה קיימת</h2>
           <form className="mt-5 space-y-4" onSubmit={handleJoin}>
@@ -98,7 +98,7 @@ function OnboardingPage() {
           </form>
         </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <Plus className="text-teal-700" size={28} />
           <h2 className="mt-4 text-xl font-bold">יצירת קהילה חדשה</h2>
           <form className="mt-5 space-y-4" onSubmit={handleCreate}>
@@ -129,7 +129,7 @@ function OnboardingPage() {
           </form>
         </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5 md:col-span-2 lg:col-span-1">
           <Boxes className="text-teal-700" size={28} />
           <h2 className="mt-4 text-xl font-bold">כניסה לקהילת דמו</h2>
           <div className="mt-4">
@@ -151,7 +151,7 @@ function OnboardingPage() {
 function CommunityCreatedModal({ community, onContinue }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
-      <div className="w-full max-w-lg rounded-lg bg-white p-6 text-right shadow-2xl">
+      <div className="w-full max-w-lg rounded-lg bg-white p-5 text-right shadow-2xl sm:p-6">
         <p className="text-sm font-semibold text-teal-700">קהילה חדשה</p>
         <h2 className="mt-2 text-2xl font-bold">הקהילה נוצרה בהצלחה!</h2>
         <p className="mt-2 text-slate-600">שתף את קוד ההצטרפות עם חברי הקהילה</p>

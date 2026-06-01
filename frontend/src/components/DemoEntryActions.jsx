@@ -31,7 +31,7 @@ function DemoEntryActions({ isSubmitting = "", onSelect }) {
 
           return (
             <button
-              className={`flex min-h-20 items-center justify-between gap-3 rounded-md border px-4 py-3 text-right transition disabled:cursor-not-allowed disabled:opacity-55 ${option.className}`}
+              className={`flex min-h-20 items-center justify-between gap-3 rounded-md border px-3 py-3 text-right transition disabled:cursor-not-allowed disabled:opacity-55 sm:px-4 ${option.className}`}
               disabled={Boolean(isSubmitting)}
               key={option.mode}
               onClick={() => onSelect(option.mode)}

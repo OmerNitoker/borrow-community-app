@@ -81,12 +81,12 @@ function ProfilePage() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-5 py-10">
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-10">
       <p className="text-sm font-semibold text-teal-700">פרופיל אישי</p>
-      <h1 className="mt-2 text-4xl font-bold">{user.name}</h1>
+      <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{user.name}</h1>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <h2 className="text-xl font-bold">פרטי משתמש</h2>
           <form className="mt-4 space-y-4" onSubmit={handleProfileSubmit}>
             <label className="block">
@@ -110,7 +110,7 @@ function ProfilePage() {
             </label>
             {profileMessage ? <p className="rounded-md bg-teal-50 px-3 py-2 text-sm text-teal-800">{profileMessage}</p> : null}
             <button
-              className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:bg-slate-400"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:bg-slate-400 sm:w-auto"
               disabled={isSavingProfile}
               type="submit"
             >
@@ -120,12 +120,12 @@ function ProfilePage() {
           </form>
         </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
+        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-xl font-bold">הקהילות שלי</h2>
             {approvedMemberships[0] ? (
               <Link
-                className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800"
                 to={`/communities/${approvedMemberships[0].community.id}/items/new`}
               >
                 <Plus size={16} />
@@ -146,13 +146,13 @@ function ProfilePage() {
                       {membership.role === "admin" ? "מנהל" : "חבר"} · {activeItemCountText(activeCountsByCommunity[membership.community.id] || 0)}
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
                       {membership.status === "approved" ? "מאושר" : "ממתין"}
                     </span>
                     {membership.status === "approved" ? (
                       <Link
-                        className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-100"
+                        className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-100"
                         to={`/communities/${membership.community.id}`}
                       >
                         מעבר לקהילה
@@ -167,7 +167,7 @@ function ProfilePage() {
         </section>
       </div>
 
-      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <h2 className="text-xl font-bold">הפריטים שלי</h2>
         {error ? <p className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
         {isLoadingItems ? (
@@ -181,25 +181,25 @@ function ProfilePage() {
           <div className="mt-4 divide-y divide-slate-100">
             {items.map((item) => (
               <div key={item.id} className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center gap-3">
                   <img alt="" className="h-16 w-16 rounded-md object-cover" src={getItemImageUrl(item)} />
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-bold">{item.title}</p>
                     <p className="text-sm text-slate-600">{item.communityName || item.category} · {item.category}</p>
                     <p className="text-sm font-semibold">{getItemStatusLabel(item)}</p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="grid gap-2 sm:flex sm:flex-wrap">
                   <Link
-                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-100"
+                    className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-100"
                     to={`/communities/${item.community}/items/${item.id}/edit`}
                   >
                     <Edit size={16} />
                     עריכה
                   </Link>
                   <button
-                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
+                    className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
                     disabled={busyId === item.id || item.hiddenByAdmin}
                     onClick={() => (item.isActive ? setConfirmItem(item) : toggleItem(item))}
                     type="button"
