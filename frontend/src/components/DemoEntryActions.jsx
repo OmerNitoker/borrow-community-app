@@ -4,14 +4,14 @@ const demoOptions = [
   {
     mode: "member",
     title: "כניסה כחבר רגיל",
-    text: "מתחילים עם 2 פריטים פעילים ורואים איך פרטי הקשר נפתחים אחרי הוספת פריט נוסף.",
+    text: "התנסות בממשק המשתמש, צפייה בפרטי הדמו, הוספת פריט.",
     icon: UserRound,
     className: "border-slate-300 bg-white text-slate-900 hover:bg-slate-100"
   },
   {
     mode: "admin",
     title: "כניסה כמנהל קהילה",
-    text: "בודקים את דשבורד הניהול, בקשות ההצטרפות וכלי הפיקוח על הקהילה.",
+    text: "התנסות בניהול פריטי ומשתמשי הקהילה.",
     icon: ShieldCheck,
     className: "border-teal-700 bg-teal-700 text-white hover:bg-teal-800"
   }

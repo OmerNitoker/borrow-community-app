@@ -18,3 +18,10 @@ export function getCommunityOverview(communityId, filters = {}) {
   const query = params.toString() ? `?${params.toString()}` : "";
   return apiRequest(`/admin/community/${communityId}/overview${query}`);
 }
+
+export function updateCommunitySettings(communityId, payload) {
+  return apiRequest(`/admin/community/${communityId}/settings`, {
+    method: "PATCH",
+    body: JSON.stringify(payload)
+  });
+}

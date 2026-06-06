@@ -14,6 +14,7 @@ export const getCommunityOverview = asyncHandler(async (req, res) => {
   const itemFilters = await getAdminItemFilters(req.query);
   const itemQuery = {
     community: req.params.communityId,
+    isDeleted: { $ne: true },
     ...itemFilters.query
   };
   const itemLimit = getItemLimit(req.query.itemLimit);
@@ -21,8 +22,8 @@ export const getCommunityOverview = asyncHandler(async (req, res) => {
   const [community, memberships, totalItemCount, activeItemCount, stats, filteredItemCount, items] = await Promise.all([
     Community.findById(req.params.communityId),
     Membership.find({ community: req.params.communityId }).populate("user").sort({ status: 1, createdAt: -1 }),
-    Item.countDocuments({ community: req.params.communityId }),
-    Item.countDocuments({ community: req.params.communityId, isActive: true }),
+    Item.countDocuments({ community: req.params.communityId, isDeleted: { $ne: true } }),
+    Item.countDocuments({ community: req.params.communityId, isActive: true, isDeleted: { $ne: true } }),
     getCommunityStats(req.params.communityId),
     Item.countDocuments(itemQuery),
     Item.find(itemQuery).populate("owner", "name").sort({ createdAt: -1 }).limit(itemLimit)
@@ -62,6 +63,27 @@ export const getCommunityOverview = asyncHandler(async (req, res) => {
       totalItems: filteredItemCount,
       hasMore: items.length < filteredItemCount
     }
+  });
+});
+
+export const updateCommunitySettings = asyncHandler(async (req, res) => {
+  await requireCommunityAdmin(req.user._id, req.params.communityId);
+
+  if (typeof req.body.requiredApproval !== "boolean") {
+    throw createHttpError(400, "requiredApproval must be a boolean.");
+  }
+
+  const community = await Community.findById(req.params.communityId);
+
+  if (!community) {
+    throw createHttpError(404, "Community not found.");
+  }
+
+  community.requiredApproval = req.body.requiredApproval;
+  await community.save();
+
+  res.json({
+    community: mapCommunity(community)
   });
 });
 

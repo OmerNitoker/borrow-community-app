@@ -36,7 +36,7 @@ export const createItem = asyncHandler(async (req, res) => {
 export const getItem = asyncHandler(async (req, res) => {
   const item = await Item.findById(req.params.itemId).populate("owner", "name phone");
 
-  if (!item) {
+  if (!item || item.isDeleted) {
     throw createHttpError(404, "Item not found.");
   }
 
@@ -59,7 +59,7 @@ export const getItem = asyncHandler(async (req, res) => {
 export const updateItem = asyncHandler(async (req, res) => {
   const item = await Item.findById(req.params.itemId);
 
-  if (!item) {
+  if (!item || item.isDeleted) {
     throw createHttpError(404, "Item not found.");
   }
 
@@ -104,7 +104,7 @@ export const updateItem = asyncHandler(async (req, res) => {
 export const hideItem = asyncHandler(async (req, res) => {
   const item = await Item.findById(req.params.itemId);
 
-  if (!item) {
+  if (!item || item.isDeleted) {
     throw createHttpError(404, "Item not found.");
   }
 
@@ -130,6 +130,26 @@ export const hideItem = asyncHandler(async (req, res) => {
   item.hiddenBy = req.user._id;
   item.hiddenByAdmin = shouldHideAsAdmin || (isAdmin && !isOwner);
   item.hiddenReason = item.hiddenByAdmin ? "admin-hidden" : "owner-hidden";
+
+  await item.save();
+  res.json({ item: mapOwnedItem(item) });
+});
+
+export const deleteItem = asyncHandler(async (req, res) => {
+  const item = await Item.findById(req.params.itemId);
+
+  if (!item || item.isDeleted) {
+    throw createHttpError(404, "Item not found.");
+  }
+
+  if (item.owner.toString() !== req.user._id.toString()) {
+    throw createHttpError(403, "Only the item owner can delete this item.");
+  }
+
+  item.isDeleted = true;
+  item.deletedAt = new Date();
+  item.deletedBy = req.user._id;
+  item.isActive = false;
 
   await item.save();
   res.json({ item: mapOwnedItem(item) });
@@ -173,7 +193,7 @@ export const deleteItemImage = asyncHandler(async (req, res) => {
 });
 
 export const getMyItems = asyncHandler(async (req, res) => {
-  const query = { owner: req.user._id };
+  const query = { owner: req.user._id, isDeleted: { $ne: true } };
 
   if (req.query.communityId) {
     query.community = req.query.communityId;
@@ -206,7 +226,7 @@ async function uploadFiles(files) {
 async function getOwnedItem(itemId, userId) {
   const item = await Item.findById(itemId);
 
-  if (!item) {
+  if (!item || item.isDeleted) {
     throw createHttpError(404, "Item not found.");
   }
 

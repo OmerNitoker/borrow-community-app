@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@700;800&family=Secular+One&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -21,4 +23,8 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+.brand-wordmark {
+  font-family: "Secular One", "Rubik", Assistant, Arial, sans-serif;
 }

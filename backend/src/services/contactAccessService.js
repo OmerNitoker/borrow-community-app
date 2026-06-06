@@ -20,7 +20,8 @@ export async function getContactAccess({ userId, item }) {
   const activeItemCount = await Item.countDocuments({
     owner: userId,
     community: item.community,
-    isActive: true
+    isActive: true,
+    isDeleted: { $ne: true }
   });
 
   const isOwner = item.owner._id

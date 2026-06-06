@@ -221,6 +221,56 @@ test("community item catalog returns paginated results", async () => {
   });
 });
 
+test("owners can soft-delete items and deleted items disappear from app queries", async () => {
+  const owner = await register("delete-owner");
+  const viewer = await register("delete-viewer");
+  const stranger = await register("delete-stranger");
+  const { community } = await createCommunity(owner.cookie, { requiredApproval: false });
+
+  await joinCommunity(viewer.cookie, community.joinCode);
+
+  const { item: ownerItem } = await createItem(owner.cookie, community.id, "Owner item");
+  const { item: firstViewerItem } = await createItem(viewer.cookie, community.id, "Viewer item 1");
+  await createItem(viewer.cookie, community.id, "Viewer item 2");
+  await createItem(viewer.cookie, community.id, "Viewer item 3");
+
+  const unlocked = await request("GET", `/items/${ownerItem.id}`, { cookie: viewer.cookie });
+
+  assert.equal(unlocked.status, 200);
+  assert.equal(unlocked.body.viewer.canViewContact, true);
+
+  const blocked = await request("DELETE", `/items/${firstViewerItem.id}/delete`, { cookie: stranger.cookie });
+
+  assert.equal(blocked.status, 403);
+
+  const deleted = await request("DELETE", `/items/${firstViewerItem.id}/delete`, { cookie: viewer.cookie });
+
+  assert.equal(deleted.status, 200);
+  assert.equal(deleted.body.item.isActive, false);
+
+  const persistedItem = await Item.findById(firstViewerItem.id);
+
+  assert.equal(persistedItem.isDeleted, true);
+  assert.equal(persistedItem.isActive, false);
+  assert.ok(persistedItem.deletedAt);
+  assert.equal(persistedItem.deletedBy.toString(), viewer.user.id);
+
+  const deletedDetail = await request("GET", `/items/${firstViewerItem.id}`, { cookie: viewer.cookie });
+  const catalog = await request("GET", `/communities/${community.id}/items?limit=24`, { cookie: viewer.cookie });
+  const profile = await request("GET", "/users/me/items", { cookie: viewer.cookie });
+  const adminOverview = await request("GET", `/admin/community/${community.id}/overview?itemLimit=24`, { cookie: owner.cookie });
+  const relocked = await request("GET", `/items/${ownerItem.id}`, { cookie: viewer.cookie });
+
+  assert.equal(deletedDetail.status, 404);
+  assert.ok(!catalog.body.items.some((item) => item.id === firstViewerItem.id));
+  assert.ok(!profile.body.items.some((item) => item.id === firstViewerItem.id));
+  assert.ok(!adminOverview.body.items.some((item) => item.id === firstViewerItem.id));
+  assert.equal(profile.body.activeCountsByCommunity[community.id], 2);
+  assert.equal(relocked.body.viewer.activeItemCount, 2);
+  assert.equal(relocked.body.viewer.canViewContact, false);
+  assert.equal(relocked.body.ownerContact, null);
+});
+
 test("admin overview filters and limits item rows", async () => {
   const admin = await register("admin-filter");
   const ownerA = await register("owner-filter-a");
@@ -263,6 +313,34 @@ test("admin overview filters and limits item rows", async () => {
 
   assert.equal(byOwner.body.itemsPagination.totalItems, 4);
   assert.ok(byOwner.body.items.every((item) => item.owner.name === "owner-filter-b"));
+});
+
+test("community admins can update join approval settings", async () => {
+  const admin = await register("settings-admin");
+  const member = await register("settings-member");
+  const { community } = await createCommunity(admin.cookie, { requiredApproval: true });
+
+  await joinCommunity(member.cookie, community.joinCode);
+  await Membership.updateOne({ user: member.user.id, community: community.id }, { status: "approved" });
+
+  const blocked = await request("PATCH", `/admin/community/${community.id}/settings`, {
+    cookie: member.cookie,
+    body: { requiredApproval: false }
+  });
+
+  assert.equal(blocked.status, 403);
+
+  const updated = await request("PATCH", `/admin/community/${community.id}/settings`, {
+    cookie: admin.cookie,
+    body: { requiredApproval: false }
+  });
+
+  assert.equal(updated.status, 200);
+  assert.equal(updated.body.community.requiredApproval, false);
+
+  const persistedCommunity = await Community.findById(community.id);
+
+  assert.equal(persistedCommunity.requiredApproval, false);
 });
 
 test("the fixed demo user can hide their own demo items for fairness testing", async () => {

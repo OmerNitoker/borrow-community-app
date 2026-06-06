@@ -218,7 +218,7 @@ function ItemFormPage({ mode }) {
               <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {existingItem.images.map((image) => (
                   <div className="overflow-hidden rounded-md border border-slate-200 bg-slate-50" key={image.publicId || image.url}>
-                    <img alt="" className="h-28 w-full object-cover" src={image.url} />
+                    <img alt="" className="h-28 w-full object-cover object-center" src={image.url} />
                     <button
                       className="inline-flex w-full items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:text-slate-400"
                       disabled={Boolean(busyImageId)}
@@ -262,7 +262,7 @@ function ItemFormPage({ mode }) {
                 <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {filePreviews.map((preview) => (
                     <div className="overflow-hidden rounded-md border border-teal-100 bg-white" key={preview.key}>
-                      <img alt="" className="h-24 w-full object-cover" src={preview.url} />
+                      <img alt="" className="h-24 w-full object-cover object-center" src={preview.url} />
                       <div className="flex items-center justify-between gap-2 px-2 py-2">
                         <span className="truncate text-xs text-slate-600">{preview.name}</span>
                         <button

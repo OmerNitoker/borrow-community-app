@@ -9,7 +9,9 @@ import { useAuth } from "../context/AuthContext.jsx";
 function OnboardingPage() {
   const navigate = useNavigate();
   const { startDemo } = useAuth();
-  const { refreshMemberships } = useOutletContext();
+  const { memberships, refreshMemberships } = useOutletContext();
+  const approvedMemberships = memberships.filter((membership) => membership.status === "approved");
+  const hasApprovedMemberships = approvedMemberships.length > 0;
   const [joinCode, setJoinCode] = useState("");
   const [communityForm, setCommunityForm] = useState({
     name: "",
@@ -67,14 +69,43 @@ function OnboardingPage() {
     }
   }
 
+  function handleCommunitySelect(event) {
+    if (!event.target.value) {
+      return;
+    }
+
+    navigate(`/communities/${event.target.value}`);
+  }
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-10">
-      <div className="max-w-3xl">
-        <p className="text-sm font-semibold text-teal-700">התחלה</p>
-        <h1 className="mt-2 text-3xl font-bold sm:text-4xl">ברוך הבא! איך תרצה להתחיל?</h1>
-        <p className="mt-3 leading-8 text-slate-700">
-          אפשר להצטרף לקהילה קיימת, לפתוח קהילה חדשה או להיכנס לדמו מלא כדי לראות את המוצר בפעולה.
-        </p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="max-w-3xl">
+          <h1 className="text-3xl font-bold sm:text-4xl">
+            {hasApprovedMemberships ? "רוצה להצטרף או ליצור קהילה נוספת?" : "ברוך הבא! איך תרצה להתחיל?"}
+          </h1>
+          <p className="mt-3 leading-8 text-slate-700">
+            אפשר להצטרף לקהילה קיימת, לפתוח קהילה חדשה או להיכנס לדמו מלא כדי לראות את המוצר בפעולה.
+          </p>
+        </div>
+
+        {hasApprovedMemberships ? (
+          <label className="block w-full max-w-xs">
+            <span className="text-sm font-semibold text-slate-700">הקהילות שלי</span>
+            <select
+              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-3 text-sm font-semibold outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-100"
+              onChange={handleCommunitySelect}
+              value=""
+            >
+              <option value="">בחירת קהילה</option>
+              {approvedMemberships.map((membership) => (
+                <option key={membership.id} value={membership.community.id}>
+                  {membership.community.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
       </div>
 
       {error ? <p className="mt-6 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}

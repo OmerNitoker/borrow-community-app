@@ -85,6 +85,19 @@ const itemSchema = new mongoose.Schema(
       default: "",
       trim: true
     },
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
+    deletedAt: {
+      type: Date,
+      default: null
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
     isDemoItem: {
       type: Boolean,
       default: false

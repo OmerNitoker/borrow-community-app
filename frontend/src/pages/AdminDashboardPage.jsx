@@ -1,7 +1,7 @@
 import { ArrowLeft, Check, EyeOff, Loader2, RotateCcw, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getCommunityOverview } from "../api/adminApi.js";
+import { getCommunityOverview, updateCommunitySettings } from "../api/adminApi.js";
 import { hideItem, updateItem } from "../api/itemApi.js";
 import { approveMembership, rejectMembership } from "../api/membershipApi.js";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
@@ -102,6 +102,19 @@ function AdminDashboardPage() {
     }
   }
 
+  async function handleUpdateApprovalSetting(requiredApproval) {
+    setBusyId("community-settings");
+
+    try {
+      await updateCommunitySettings(communityId, { requiredApproval });
+      await loadOverview();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyId("");
+    }
+  }
+
   async function runConfirmedAction() {
     if (!confirmAction) {
       return;
@@ -117,6 +130,10 @@ function AdminDashboardPage() {
 
     if (confirmAction.type === "reactivate-item") {
       await handleReactivateItem(confirmAction.id);
+    }
+
+    if (confirmAction.type === "community-settings") {
+      await handleUpdateApprovalSetting(confirmAction.requiredApproval);
     }
 
     setConfirmAction(null);
@@ -161,6 +178,11 @@ function AdminDashboardPage() {
             className="mt-4 max-w-3xl"
             joinCode={overview.community.joinCode}
             requiredApproval={overview.community.requiredApproval}
+          />
+          <JoinApprovalSetting
+            busyId={busyId}
+            community={overview.community}
+            onConfirmAction={setConfirmAction}
           />
         </section>
       ) : null}
@@ -294,7 +316,7 @@ function AdminDashboardPage() {
       {confirmAction ? (
         <ConfirmDialog
           confirmText={confirmAction.confirmText}
-          isLoading={busyId === confirmAction.id}
+          isLoading={busyId === confirmAction.id || busyId === "community-settings"}
           onCancel={() => setConfirmAction(null)}
           onConfirm={runConfirmedAction}
           text={confirmAction.text}
@@ -306,11 +328,56 @@ function AdminDashboardPage() {
   );
 }
 
+function JoinApprovalSetting({ busyId, community, onConfirmAction }) {
+  const nextRequiredApproval = !community.requiredApproval;
+
+  return (
+    <div className="mt-5 max-w-3xl border-t border-teal-100 pt-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-lg font-bold">הגדרות הצטרפות</h3>
+          <p className="mt-2 leading-7 text-slate-700">
+            {community.requiredApproval
+              ? "משתמשים שיצטרפו עם הקוד ימתינו לאישור מנהל לפני שיוכלו לראות את פריטי הקהילה."
+              : "משתמשים שיזינו את הקוד יצטרפו לקהילה באופן מיידי."}
+          </p>
+        </div>
+        <button
+          aria-pressed={community.requiredApproval}
+          className={`inline-flex w-full items-center justify-center gap-3 rounded-md border px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${
+            community.requiredApproval
+              ? "border-teal-700 bg-teal-700 text-white hover:bg-teal-800"
+              : "border-slate-300 bg-white text-slate-800 hover:bg-slate-100"
+          }`}
+          disabled={busyId === "community-settings"}
+          onClick={() =>
+            onConfirmAction({
+              type: "community-settings",
+              id: "community-settings",
+              requiredApproval: nextRequiredApproval,
+              title: nextRequiredApproval ? "להפעיל אישור מנהל להצטרפות?" : "לבטל אישור מנהל להצטרפות?",
+              text: nextRequiredApproval
+                ? "משתמשים חדשים שיצטרפו עם קוד הקהילה ימתינו לאישור מנהל לפני שיוכלו לראות את פריטי הקהילה."
+                : "משתמשים חדשים שיזינו את קוד הקהילה יצטרפו באופן מיידי ויוכלו לראות את פריטי הקהילה.",
+              confirmText: nextRequiredApproval ? "כן, להפעיל אישור" : "כן, לבטל אישור",
+              tone: nextRequiredApproval ? "success" : "danger"
+            })
+          }
+          type="button"
+        >
+          {busyId === "community-settings" ? <Loader2 className="animate-spin" size={16} /> : null}
+          {community.requiredApproval ? "דורש אישור מנהל" : "הצטרפות מיידית"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AdminItemRow({ busyId, item, onConfirmAction }) {
   return (
     <div className="flex flex-col gap-3 border-b border-slate-100 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-center gap-3">
-        <img alt="" className="h-14 w-14 rounded-md object-cover" src={getItemImageUrl(item)} />
+        <img alt="" className="h-14 w-14 rounded-md object-cover object-center" src={getItemImageUrl(item, "thumbnail")} />
         <div className="min-w-0">
           <p className="font-bold">{item.title}</p>
           <p className="text-sm text-slate-600">

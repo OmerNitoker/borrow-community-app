@@ -1,19 +1,48 @@
 const fallbackImagesByCategory = {
   "ציוד טיולים":
-    "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=900&q=75",
+    "https://res.cloudinary.com/dmhaze3tc/image/upload/v1780685327/borrow/travel-default_kbpcfm.jpg",
   "כלי עבודה":
-    "https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=900&q=75",
+    "https://res.cloudinary.com/dmhaze3tc/image/upload/v1780685466/borrow/tools-default_wawval.jpg",
   "כלי מטבח":
-    "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=900&q=75",
+    "https://res.cloudinary.com/dmhaze3tc/image/upload/v1780685676/borrow/kitchenware-default_q1ehhn.jpg",
   "כלי נגינה":
-    "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=900&q=75",
+    "https://res.cloudinary.com/dmhaze3tc/image/upload/v1780685806/borrow/music-default_k00ega.jpg",
   "ציוד ספורט":
-    "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=900&q=75",
+    "https://res.cloudinary.com/dmhaze3tc/image/upload/v1780686272/borrow/sports-default_bgq1nq.jpg",
   "ציוד לאירועים":
-    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=900&q=75",
-  אחר: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=75"
+    "https://res.cloudinary.com/dmhaze3tc/image/upload/v1780685983/borrow/event-default_ewv7v1.jpg",
+  אחר: "https://res.cloudinary.com/dmhaze3tc/image/upload/v1780686082/borrow/other-default_afrbf5.jpg"
 };
 
-export function getItemImageUrl(item) {
-  return item.imageUrl || item.images?.[0]?.url || fallbackImagesByCategory[item.category] || fallbackImagesByCategory["אחר"];
+const cloudinaryTransforms = {
+  card: "w_700,h_460,c_fill,g_auto,q_auto:good,f_auto",
+  detail: "w_1400,h_900,c_fill,g_auto,q_auto:best,f_auto",
+  thumbnail: "w_180,h_180,c_fill,g_auto,q_auto:good,f_auto"
+};
+
+export function getItemImageUrl(item, variant = "card") {
+  const imageUrl = item.imageUrl || item.images?.[0]?.url || fallbackImagesByCategory[item.category] || fallbackImagesByCategory["אחר"];
+
+  return getTransformedImageUrl(imageUrl, variant);
+}
+
+export function getTransformedImageUrl(imageUrl, variant = "card") {
+  const transform = cloudinaryTransforms[variant];
+
+  if (!imageUrl || !transform || !imageUrl.includes("/image/upload/")) {
+    return imageUrl;
+  }
+
+  const uploadMarker = "/image/upload/";
+  const uploadIndex = imageUrl.indexOf(uploadMarker);
+  const prefix = imageUrl.slice(0, uploadIndex + uploadMarker.length);
+  const rest = imageUrl.slice(uploadIndex + uploadMarker.length);
+  const [firstSegment, ...remainingSegments] = rest.split("/");
+  const hasExistingTransform = firstSegment && !/^v\d+$/.test(firstSegment) && firstSegment.includes("_");
+
+  if (hasExistingTransform) {
+    return `${prefix}${transform}/${remainingSegments.join("/")}`;
+  }
+
+  return `${prefix}${transform}/${rest}`;
 }

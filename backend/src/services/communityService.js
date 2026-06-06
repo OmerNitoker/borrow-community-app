@@ -85,7 +85,7 @@ export async function getCommunityStats(communityId) {
   const [memberCount, pendingCount, itemCount] = await Promise.all([
     Membership.countDocuments({ community: communityId, status: "approved" }),
     Membership.countDocuments({ community: communityId, status: "pending" }),
-    Item.countDocuments({ community: communityId, isActive: true })
+    Item.countDocuments({ community: communityId, isActive: true, isDeleted: { $ne: true } })
   ]);
 
   return { memberCount, pendingCount, itemCount };

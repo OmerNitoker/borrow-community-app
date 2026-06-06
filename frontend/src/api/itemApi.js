@@ -31,6 +31,12 @@ export function deleteItemImage(itemId, publicId) {
   });
 }
 
+export function deleteItem(itemId) {
+  return apiRequest(`/items/${itemId}/delete`, {
+    method: "DELETE"
+  });
+}
+
 export function hideItem(itemId, options = {}) {
   const query = options.asAdmin ? "?asAdmin=true" : "";
 

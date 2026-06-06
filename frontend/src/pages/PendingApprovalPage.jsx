@@ -14,6 +14,7 @@ function PendingApprovalPage() {
   const [membership, setMembership] = useState(null);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState("");
+  const approvedMembership = memberships.find((item) => item.status === "approved");
 
   useEffect(() => {
     setMembership(memberships.find((item) => item.community.id === communityId));
@@ -91,6 +92,14 @@ function PendingApprovalPage() {
           >
             קהילה אחרת
           </Link>
+          {approvedMembership ? (
+            <Link
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-900 hover:bg-teal-100"
+              to={`/communities/${approvedMembership.community.id}`}
+            >
+              חזרה לקהילה שלי
+            </Link>
+          ) : null}
         </div>
 
         <div className="mt-7 rounded-md bg-slate-50 p-4">

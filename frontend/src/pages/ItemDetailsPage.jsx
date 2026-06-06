@@ -1,12 +1,12 @@
 import { ArrowRight, Edit, EyeOff, Phone, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { getItem, hideItem, updateItem } from "../api/itemApi.js";
+import { deleteItem, getItem, hideItem, updateItem } from "../api/itemApi.js";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import LoadingScreen from "../components/LoadingScreen.jsx";
 import { getConditionLabel } from "../constants/itemOptions.js";
 import { missingFairnessItemsText } from "../utils/hebrewText.js";
-import { getItemImageUrl } from "../utils/itemImages.js";
+import { getItemImageUrl, getTransformedImageUrl } from "../utils/itemImages.js";
 
 function ItemDetailsPage() {
   const { communityId, itemId } = useParams();
@@ -34,6 +34,19 @@ function ItemDetailsPage() {
 
     try {
       await hideItem(itemId);
+      navigate(`/communities/${communityId}`);
+    } catch (err) {
+      setError(err.message);
+      setIsUpdatingStatus(false);
+    }
+  }
+
+  async function handleOwnerDelete() {
+    setIsUpdatingStatus(true);
+    setError("");
+
+    try {
+      await deleteItem(itemId);
       navigate(`/communities/${communityId}`);
     } catch (err) {
       setError(err.message);
@@ -81,8 +94,8 @@ function ItemDetailsPage() {
 
   const galleryImages = data.item.images?.length
     ? data.item.images.map((currentImage) => currentImage.url).filter(Boolean)
-    : [getItemImageUrl(data.item)];
-  const image = galleryImages[selectedImageIndex] || galleryImages[0];
+    : [getItemImageUrl(data.item, "detail")];
+  const image = getTransformedImageUrl(galleryImages[selectedImageIndex] || galleryImages[0], "detail");
   const missingCount = Math.max(0, data.viewer.requiredActiveItemCount - data.viewer.activeItemCount);
   const canAdminReactivate = data.viewer.isCommunityAdmin && !data.item.isActive && data.item.hiddenByAdmin;
   const canShowAdminActions = data.viewer.isCommunityAdmin && (!data.viewer.isOwner || canAdminReactivate);
@@ -107,13 +120,15 @@ function ItemDetailsPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <img alt="" className="h-72 w-full object-cover sm:h-96" src={image} />
+          <div className="grid aspect-[4/3] place-items-center bg-slate-50 p-3 sm:p-4">
+            <img alt="" className="max-h-full max-w-full object-contain" src={image} />
+          </div>
           {galleryImages.length > 1 ? (
             <div className="grid grid-cols-3 gap-2 p-3">
               {galleryImages.map((currentImage, index) => (
                 <button
                   aria-label={`הצגת תמונה ${index + 1}`}
-                  className={`rounded-md border-2 p-0.5 transition ${
+                  className={`overflow-hidden rounded-md border-2 bg-slate-50 p-0.5 transition ${
                     selectedImageIndex === index
                       ? "border-teal-700"
                       : "border-transparent hover:border-teal-200"
@@ -122,7 +137,11 @@ function ItemDetailsPage() {
                   onClick={() => setSelectedImageIndex(index)}
                   type="button"
                 >
-                  <img alt="" className="h-20 w-full rounded object-cover sm:h-24" src={currentImage} />
+                  <img
+                    alt=""
+                    className="aspect-[4/3] w-full rounded object-cover object-center"
+                    src={getTransformedImageUrl(currentImage, "thumbnail")}
+                  />
                 </button>
               ))}
             </div>
@@ -169,7 +188,9 @@ function ItemDetailsPage() {
           onConfirm={
             confirmAction.type === "owner-hide"
               ? handleOwnerHide
-              : confirmAction.type === "admin-hide"
+              : confirmAction.type === "owner-delete"
+                ? handleOwnerDelete
+                : confirmAction.type === "admin-hide"
                 ? handleAdminHide
                 : handleAdminReactivate
           }
@@ -193,6 +214,7 @@ function OwnerActions({ communityId, data, itemId, onConfirmAction }) {
           <Edit size={17} />
           עריכה
         </Link>
+        <DeleteItemButton onConfirmAction={onConfirmAction} />
       </div>
     );
   }
@@ -209,7 +231,7 @@ function OwnerActions({ communityId, data, itemId, onConfirmAction }) {
         עריכה
       </Link>
       <button
-        className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+        className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-100"
         onClick={() =>
           onConfirmAction({
             type: hideAsAdmin ? "admin-hide" : "owner-hide",
@@ -222,10 +244,30 @@ function OwnerActions({ communityId, data, itemId, onConfirmAction }) {
         }
         type="button"
       >
-        <Trash2 size={17} />
+        <EyeOff size={17} />
         הסתרה
       </button>
+      <DeleteItemButton onConfirmAction={onConfirmAction} />
     </div>
+  );
+}
+
+function DeleteItemButton({ onConfirmAction }) {
+  return (
+    <button
+      className="inline-flex items-center justify-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+      onClick={() =>
+        onConfirmAction({
+          type: "owner-delete",
+          title: "האם למחוק את הפריט?",
+          confirmText: "כן, למחוק"
+        })
+      }
+      type="button"
+    >
+      <Trash2 size={17} />
+      מחיקה
+    </button>
   );
 }
 

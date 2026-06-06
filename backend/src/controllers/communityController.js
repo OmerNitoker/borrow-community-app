@@ -70,7 +70,8 @@ export const getCommunityItems = asyncHandler(async (req, res) => {
 
   const query = {
     community: req.params.communityId,
-    isActive: true
+    isActive: true,
+    isDeleted: { $ne: true }
   };
 
   if (req.query.category) {
@@ -94,7 +95,8 @@ export const getCommunityItems = asyncHandler(async (req, res) => {
     Item.countDocuments({
       community: req.params.communityId,
       owner: req.user._id,
-      isActive: true
+      isActive: true,
+      isDeleted: { $ne: true }
     })
   ]);
 

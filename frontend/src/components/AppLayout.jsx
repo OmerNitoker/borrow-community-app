@@ -1,4 +1,4 @@
-import { LogOut, ShieldCheck, UserRound } from "lucide-react";
+import { LogOut, Plus, ShieldCheck, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate, useParams } from "react-router-dom";
 import { getMyCommunities } from "../api/communityApi.js";
@@ -27,6 +27,10 @@ function AppLayout() {
 
   const approvedMemberships = memberships.filter((membership) => membership.status === "approved");
   const currentMembership = approvedMemberships.find((membership) => membership.community.id === communityId);
+  const adminMembership =
+    currentMembership?.role === "admin"
+      ? currentMembership
+      : approvedMemberships.find((membership) => membership.role === "admin");
 
   async function handleLogout() {
     await logout();
@@ -38,7 +42,7 @@ function AppLayout() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:px-5 sm:py-4 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
-            <Link className="text-sm font-semibold text-teal-700" to="/">
+            <Link className="brand-wordmark text-xl leading-none text-teal-900" to="/">
               השכן
             </Link>
             <h1 className="truncate text-lg font-bold sm:text-xl">שלום, {user.name}</h1>
@@ -65,6 +69,14 @@ function AppLayout() {
             ) : null}
 
             <Link
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-teal-200 bg-white px-3 py-2 text-sm font-semibold text-teal-900 hover:bg-teal-50"
+              to="/onboarding"
+            >
+              <Plus size={17} />
+              קהילה נוספת
+            </Link>
+
+            <Link
               className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-100"
               to="/profile"
             >
@@ -72,10 +84,10 @@ function AppLayout() {
               פרופיל
             </Link>
 
-            {currentMembership?.role === "admin" ? (
+            {adminMembership ? (
               <Link
                 className="inline-flex items-center justify-center gap-2 rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-900 hover:bg-teal-100"
-                to={`/communities/${communityId}/admin`}
+                to={`/communities/${adminMembership.community.id}/admin`}
               >
                 <ShieldCheck size={17} />
                 ניהול

@@ -62,6 +62,7 @@ function CommunityPage() {
   const isAdmin = data.membership.role === "admin";
   const accessStatus = itemsData.accessStatus;
   const pagination = itemsData.pagination;
+  const hasActiveItemFilter = debouncedSearch.trim().length > 0 || Boolean(filters.category);
 
   function handleSearchChange(event) {
     setSearchInput(event.target.value);
@@ -77,8 +78,7 @@ function CommunityPage() {
     <section className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-10">
       <div className="grid gap-5 lg:grid-cols-[1.5fr_0.8fr]">
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-sm font-semibold text-teal-700">קהילה</p>
-          <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{data.community.name}</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">{data.community.name}</h1>
           {data.community.description ? <p className="mt-3 leading-8 text-slate-700">{data.community.description}</p> : null}
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -151,7 +151,7 @@ function CommunityPage() {
       <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {itemsData.items.length === 0 ? (
           <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-slate-600 sm:col-span-2 lg:col-span-3">
-            עדיין אין פריטים פעילים בקהילה.
+            {hasActiveItemFilter ? "לא נמצאו פריטים התואמים לחיפוש." : "עדיין אין פריטים פעילים בקהילה."}
           </div>
         ) : (
           itemsData.items.map((item) => <ItemCard communityId={communityId} item={item} key={item.id} />)
@@ -181,7 +181,7 @@ function ItemCard({ communityId, item }) {
 
   return (
     <Link className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" to={`/communities/${communityId}/items/${item.id}`}>
-      <img alt="" className="h-44 w-full object-cover sm:h-40" src={getItemImageUrl(item)} />
+      <img alt="" className="aspect-[4/3] w-full object-cover object-center" src={getItemImageUrl(item, "card")} />
       <div className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
